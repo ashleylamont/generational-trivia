@@ -2,8 +2,9 @@ import { GENERATIONS, GEN_INDEX } from './constants.js'
 import { generationDistance } from './scoring.js'
 import { weightedPick, pickOne } from './rng.js'
 
-// Difficulty mix aim per draw: ~40% d1 / 40% d2 / 20% d3.
-const DIFFICULTY_WEIGHTS = { 1: 0.4, 2: 0.4, 3: 0.2 }
+// Default difficulty mix (the "Standard" stake) — skews harder than a typical
+// quiz. Teams can override this via their chosen stake (see STAKES).
+const DEFAULT_DIFFICULTY_WEIGHTS = { 1: 0.2, 2: 0.45, 3: 0.35 }
 
 // Pick which generation a question should come from, given the answering team's
 // home generations and the round's draw mode.
@@ -33,16 +34,18 @@ export function pickTargetGen({ homeGens, mode, rng }) {
   return pickOne(allKeys, rng)
 }
 
-// Choose a difficulty present in the pool, biased to the 40/40/20 aim.
-function pickDifficulty(pool, rng) {
+// Choose a difficulty present in the pool, biased by the team's stake weights.
+function pickDifficulty(pool, rng, weights = DEFAULT_DIFFICULTY_WEIGHTS) {
   const present = [...new Set(pool.map((q) => q.difficulty))]
-  const items = present.map((d) => ({ weight: DIFFICULTY_WEIGHTS[d] ?? 0.33, value: d }))
+  // A tiny floor so a tier is still reachable if the stake zeroed it but it's the
+  // only difficulty available in the pool.
+  const items = present.map((d) => ({ weight: (weights[d] ?? 0) + 0.001, value: d }))
   return weightedPick(items, rng)
 }
 
 // Draw a single unused question honouring gen/category with the spec's fallback
 // chain. Returns null only if the whole bank is exhausted.
-export function drawQuestion({ bank, usedIds, gen, category, enabledCategories, rng }) {
+export function drawQuestion({ bank, usedIds, gen, category, enabledCategories, rng, diffWeights }) {
   const isFree = (q) => !usedIds.has(q.id)
   const inEnabled = (q) => !enabledCategories || enabledCategories.includes(q.category)
 
@@ -72,7 +75,7 @@ export function drawQuestion({ bank, usedIds, gen, category, enabledCategories, 
       const minDist = Math.min(...pool.map((q) => Math.abs(GEN_INDEX[q.gen] - target)))
       pool = pool.filter((q) => Math.abs(GEN_INDEX[q.gen] - target) === minDist)
     }
-    const diff = pickDifficulty(pool, rng)
+    const diff = pickDifficulty(pool, rng, diffWeights)
     const byDiff = pool.filter((q) => q.difficulty === diff)
     return pickOne(byDiff.length ? byDiff : pool, rng)
   }

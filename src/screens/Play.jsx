@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Btn, Screen, GenBadge, TimerRing, TeamPill } from '../ui/components.jsx'
+import { Btn, Screen, GenBadge, TimerRing, TeamPill, DifficultyPips } from '../ui/components.jsx'
 import { genMeta, eraVars } from '../ui/era.js'
 import { GENERATIONS, CATEGORIES, CAT_BY_KEY, WAGER_PRESETS, ROUND_KIND } from '../engine/constants.js'
 import { currentTeam } from '../engine/reducer.js'
@@ -227,12 +227,15 @@ export function QuestionScreen({ state, dispatch, onSkip }) {
         {state.timerSeconds > 0 && timerOn && <TimerRing seconds={left} total={state.timerSeconds} />}
       </div>
 
-      {/* badge + points */}
+      {/* badge + points + difficulty */}
       <div className="mt-5 flex items-center justify-between">
         <GenBadge genKey={cur.gen} category={cur.category} />
-        <span className="rounded-lg bg-ink-800 px-3 py-1.5 font-display text-sm font-extrabold era-accent-text">
-          {points}
-        </span>
+        <div className="flex flex-col items-end gap-1">
+          <span className="rounded-lg bg-ink-800 px-3 py-1.5 font-display text-sm font-extrabold era-accent-text">
+            {points}
+          </span>
+          <DifficultyPips difficulty={q.difficulty} />
+        </div>
       </div>
 
       {/* question */}

@@ -3,6 +3,7 @@ import { reducer, initialState, PHASE, currentTeam, drawModeForKind } from './en
 import { drawQuestion, pickTargetGen } from './engine/draw.js'
 import { prepareQuestion } from './engine/prepare.js'
 import { mulberry32, randomSeed, pickOne } from './engine/rng.js'
+import { STAKES } from './engine/constants.js'
 import QUESTION_BANK from './data/questions/index.js'
 
 import { TitleScreen, TeamSetup, OptionsSetup } from './screens/Setup.jsx'
@@ -49,6 +50,7 @@ export default function App() {
       category,
       enabledCategories: state.enabledCategories,
       rng,
+      diffWeights: STAKES[team.stake]?.weights,
     })
     return raw ? prepareQuestion(raw) : null
   }

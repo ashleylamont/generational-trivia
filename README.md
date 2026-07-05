@@ -29,19 +29,25 @@ npm run build    # production build into dist/
 ## How a game works
 
 1. **Set up** 2–4 teams. Each team picks its **home eras** (the generations its players actually
-   come from) — multi-select, because families team up (Grandma + grandkid).
+   come from) — multi-select, because families team up (Grandma + grandkid) — and a **difficulty**:
+   *Standard*, *Hard*, or *Brutal*. Opting into harder questions is a risk/reward lever: tougher
+   questions are worth more points.
 2. Pick a **length** (Quick / Classic / Marathon), a **timer**, and which **categories** are in.
 3. **Every question is read aloud and answered aloud.** The team in the hot seat gets a question
    read to them; someone starts the timer; they say their answer out loud; then the phone reveals
    the canonical answer (plus accepted variants) and the room taps **Got it** or **Missed it** on
    the honour system. No multiple choice — you have to actually know it.
 4. Play the rounds:
-   - **Round 1 — Home Turf:** questions from your own eras. Flat 10 points.
+   - **Round 1 — Home Turf:** questions from your own eras. Base 10 points.
    - **Round 2 — Gen Swap:** questions from eras that aren't yours, weighted toward the furthest.
-     Scoring is `10 + 5 × distance` (up to 30).
+     Scoring is `10 + 5 × distance`.
    - **Round 3 — Lucky Dip** *(Classic & Marathon)*: a spinner lands on a random era × category.
    - **Round 4 — Time Warp Wager** *(Marathon; also the finale of Classic)*: see the era up front,
      wager 0–50% of your score, then answer.
+
+   On top of all of that, **every question adds a difficulty bonus** — `+5` for a medium question,
+   `+10` for a hard one (difficulty is judged relative to the question's own generation). So a team
+   on the *Brutal* stake reliably draws the high-value hard questions.
 5. **Steals:** a missed answer (not a timeout) can be offered to another team, who call out an
    answer for the reader to judge — a correct steal is worth half points.
 6. **Skips:** one per team per round. **Ties** at the end trigger sudden death.

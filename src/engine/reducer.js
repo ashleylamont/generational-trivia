@@ -7,6 +7,7 @@ import {
   TIMER_OPTIONS,
   ROUND_KIND,
   GEN_INDEX,
+  DEFAULT_STAKE,
 } from './constants.js'
 import { generationDistance, basePoints, stealPoints, clampWager, resolveWager } from './scoring.js'
 
@@ -47,6 +48,7 @@ function makeTeam(i) {
     name: DEFAULT_TEAM_NAMES[i % DEFAULT_TEAM_NAMES.length],
     homeGens: [...(DEFAULT_HOMEGENS[i] || ['millennial'])],
     color: TEAM_COLORS[i % TEAM_COLORS.length],
+    stake: DEFAULT_STAKE,
     score: 0,
     skipsLeft: 1,
   }
@@ -179,7 +181,7 @@ function contextForQuestion(state, prepared) {
   const team = state.teams.find((t) => t.id === state.current.teamId)
   const kind = state.current.roundKind
   const distance = generationDistance(prepared.gen, team.homeGens)
-  const base = basePoints(kind, distance)
+  const base = basePoints(kind, distance, prepared.difficulty)
   return { distance, base }
 }
 
@@ -326,6 +328,13 @@ export function reducer(state, action) {
           const i = TEAM_COLORS.indexOf(t.color)
           return { ...t, color: TEAM_COLORS[(i + 1) % TEAM_COLORS.length] }
         }),
+      }
+    case 'SET_STAKE':
+      return {
+        ...state,
+        teams: state.teams.map((t) =>
+          t.id === action.teamId ? { ...t, stake: action.stake } : t,
+        ),
       }
 
     // -- Options --------------------------------------------------------------
