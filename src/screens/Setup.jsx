@@ -6,7 +6,7 @@ import {
   GAME_LENGTHS,
   TIMER_OPTIONS,
   DEFAULT_TEAM_NAMES,
-  STAKES,
+  DIFFICULTIES,
 } from '../engine/constants.js'
 
 export function TitleScreen({ onNew }) {
@@ -111,28 +111,30 @@ export function TeamSetup({ state, dispatch, onNext }) {
               })}
             </div>
 
-            {/* Difficulty opt-in: harder questions are worth more points. */}
+            {/* Default difficulty — teams can still change it before each question. */}
             <div className="mt-3">
               <div className="mb-1.5 flex items-center justify-between">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-white/40">
-                  Difficulty
+                  Default difficulty
                 </span>
-                <span className="text-[11px] text-white/45">{STAKES[team.stake]?.hint}</span>
+                <span className="text-[11px] text-white/45">harder = more points</span>
               </div>
               <div className="grid grid-cols-3 gap-1.5">
-                {Object.values(STAKES).map((s) => {
-                  const on = team.stake === s.key
+                {DIFFICULTIES.map((d) => {
+                  const on = team.defaultDifficulty === d.level
                   return (
                     <button
-                      key={s.key}
+                      key={d.level}
                       type="button"
-                      onClick={() => dispatch({ type: 'SET_STAKE', teamId: team.id, stake: s.key })}
+                      onClick={() =>
+                        dispatch({ type: 'SET_DEFAULT_DIFFICULTY', teamId: team.id, level: d.level })
+                      }
                       className={`flex items-center justify-center gap-1 rounded-xl px-2 py-2 text-sm font-bold transition ${
                         on ? 'era-accent-bg text-black' : 'bg-ink-700 text-white/60'
                       }`}
                     >
-                      <span>{s.emoji}</span>
-                      <span>{s.label}</span>
+                      <span>{d.emoji}</span>
+                      <span>{d.label}</span>
                     </button>
                   )
                 })}
@@ -197,6 +199,19 @@ export function OptionsSetup({ state, dispatch, onBack, onStart }) {
               <div className="text-[11px] opacity-70">{t.seconds ? `${t.seconds}s` : '∞'}</div>
             </Toggle>
           ))}
+        </div>
+      </Section>
+
+      <Section label="Spin-up animation">
+        <div className="grid grid-cols-2 gap-2">
+          <Toggle active={state.spinnerOn} onClick={() => !state.spinnerOn && dispatch({ type: 'TOGGLE_SPINNER' })}>
+            <div className="font-display text-sm">🎰 On</div>
+            <div className="text-[11px] opacity-70">reel before each Q</div>
+          </Toggle>
+          <Toggle active={!state.spinnerOn} onClick={() => state.spinnerOn && dispatch({ type: 'TOGGLE_SPINNER' })}>
+            <div className="font-display text-sm">Off</div>
+            <div className="text-[11px] opacity-70">straight to the question</div>
+          </Toggle>
         </div>
       </Section>
 

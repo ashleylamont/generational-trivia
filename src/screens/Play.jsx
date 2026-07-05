@@ -1,7 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Btn, Screen, GenBadge, TimerRing, TeamPill, DifficultyPips } from '../ui/components.jsx'
+import { Btn, Screen, GenBadge, TimerRing, DifficultyPips, PlayStatus } from '../ui/components.jsx'
 import { genMeta, eraVars } from '../ui/era.js'
-import { GENERATIONS, CATEGORIES, CAT_BY_KEY, WAGER_PRESETS, ROUND_KIND } from '../engine/constants.js'
+import {
+  GENERATIONS,
+  CATEGORIES,
+  CAT_BY_KEY,
+  WAGER_PRESETS,
+  ROUND_KIND,
+  DIFFICULTIES,
+} from '../engine/constants.js'
 import { currentTeam } from '../engine/reducer.js'
 import {
   CORRECT_LINES,
@@ -19,15 +26,6 @@ const ROUND_NAMES = {
   [ROUND_KIND.SWAP]: 'Gen Swap',
   [ROUND_KIND.LUCKY]: 'Lucky Dip',
   [ROUND_KIND.WAGER]: 'Time Warp',
-}
-
-function roundLabel(state) {
-  return `Round ${state.roundIndex + 1} · ${ROUND_NAMES[state.current?.roundKind] ?? ''}`
-}
-
-function questionCounter(state) {
-  const cycle = Math.floor(state.turnPos / state.teams.length) + 1
-  return `Q ${cycle}/${state.questionsPerTeam}`
 }
 
 // The canonical answer + any accepted variants, styled for the judge.
@@ -48,23 +46,51 @@ function AnswerCard({ question }) {
   )
 }
 
-// ---- Handoff ----------------------------------------------------------------
-export function Handoff({ state, onReady }) {
+// ---- Handoff (with per-question difficulty pick) ----------------------------
+export function Handoff({ state, dispatch, onReady }) {
   const team = currentTeam(state)
+  const chosen = state.current?.chosenDifficulty ?? 2
   const subtitle = pick(HANDOFF_SUBTITLES, state.turnPos + state.roundIndex)
   return (
     <div
       className="grid h-[100dvh] w-full place-items-center overflow-y-auto px-6 py-6 text-center"
       style={{ background: `linear-gradient(160deg, ${team.color}cc, ${team.color}55), #0d0f14` }}
     >
-      <div>
+      <div className="w-full max-w-xs">
         <div className="text-5xl sm:text-6xl">🎙️</div>
-        <p className="mt-4 text-lg font-bold text-white/80">In the hot seat:</p>
+        <p className="mt-3 text-lg font-bold text-white/80">In the hot seat:</p>
         <h1 className="mt-1 font-display t-h1 font-extrabold text-white drop-shadow">{team.name}</h1>
-        <p className="mx-auto mt-4 max-w-xs text-sm font-semibold text-white/75">
+        <p className="mx-auto mt-3 max-w-xs text-sm font-semibold text-white/75">
           Someone else grab the phone and read them the question aloud. {subtitle}
         </p>
-        <div className="mx-auto mt-8 w-64">
+
+        {/* Choose how hard you want this one — harder pays more. */}
+        <p className="mt-6 text-xs font-bold uppercase tracking-widest text-white/70">
+          Pick your difficulty
+        </p>
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          {DIFFICULTIES.map((d) => {
+            const on = chosen === d.level
+            return (
+              <button
+                key={d.level}
+                type="button"
+                onClick={() => dispatch({ type: 'SET_QUESTION_DIFFICULTY', level: d.level })}
+                className={`rounded-2xl px-1 py-3 transition ${
+                  on ? 'bg-white text-black shadow-lg' : 'bg-black/25 text-white/80'
+                }`}
+              >
+                <div className="text-2xl leading-none">{d.emoji}</div>
+                <div className="mt-1 font-display text-sm font-extrabold">{d.label}</div>
+                <div className="text-[10px] font-bold opacity-70">
+                  {d.bonus ? `+${d.bonus} pts` : 'base pts'}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="mx-auto mt-6 w-full">
           <Btn onClick={onReady} style={eraVars(team.homeGens[0])}>
             Read the question
           </Btn>
@@ -74,54 +100,138 @@ export function Handoff({ state, onReady }) {
   )
 }
 
-// ---- Lucky Dip spinner ------------------------------------------------------
+// ---- Horizontal reel spinner (runs before every question, for fun) ----------
+const REEL_CELL = 116 // px
+const REEL_GAP = 10
+const REEL_STEP = REEL_CELL + REEL_GAP
+
+function buildReel(target) {
+  const gens = GENERATIONS
+  const cats = CATEGORIES
+  const rand = () => ({
+    gen: gens[Math.floor(Math.random() * gens.length)].key,
+    category: cats[Math.floor(Math.random() * cats.length)].key,
+  })
+  const cells = []
+  for (let i = 0; i < 18; i++) cells.push(rand())
+  const targetIndex = cells.length
+  cells.push({ gen: target.gen, category: target.category })
+  for (let i = 0; i < 3; i++) cells.push(rand())
+  return { cells, targetIndex }
+}
+
+function ReelCell({ cell, active }) {
+  const g = genMeta(cell.gen)
+  const cat = CAT_BY_KEY[cell.category]
+  return (
+    <div
+      className={`flex flex-col items-center justify-center rounded-2xl transition-transform ${
+        active ? 'scale-105' : 'opacity-80'
+      }`}
+      style={{
+        width: REEL_CELL,
+        height: REEL_CELL,
+        marginRight: REEL_GAP,
+        flex: '0 0 auto',
+        background: `linear-gradient(135deg, ${g.accent}, ${g.accentSoft})`,
+      }}
+    >
+      <span className="text-3xl leading-none">{g.emoji}</span>
+      <span className="mt-1 font-display text-sm font-extrabold text-black">{g.short}</span>
+      <span className="mt-0.5 text-[11px] font-bold text-black/70">
+        {cat.emoji} {cat.label}
+      </span>
+    </div>
+  )
+}
+
 export function Spinner({ state, onDone }) {
   const target = { gen: state.current.gen, category: state.current.category }
-  const [display, setDisplay] = useState({ gen: 'boomer', category: 'music' })
-  const [settled, setSettled] = useState(false)
+  const isLucky = state.current.roundKind === ROUND_KIND.LUCKY
+  const containerRef = useRef(null)
+  const reelRef = useRef(null)
+  if (!reelRef.current) reelRef.current = buildReel(target)
+  const { cells, targetIndex } = reelRef.current
+
+  const [tx, setTx] = useState(0)
+  const [animate, setAnimate] = useState(false)
+  const [landed, setLanded] = useState(false)
 
   useEffect(() => {
-    let i = 0
-    const gens = GENERATIONS.map((g) => g.key)
-    const cats = CATEGORIES.map((c) => c.key)
-    const iv = setInterval(() => {
-      i++
-      setDisplay({
-        gen: gens[Math.floor(Math.random() * gens.length)],
-        category: cats[Math.floor(Math.random() * cats.length)],
-      })
-    }, 90)
-    const stop = setTimeout(() => {
-      clearInterval(iv)
-      setDisplay(target)
-      setSettled(true)
-      setTimeout(onDone, 900)
-    }, 1700)
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+    const cw = containerRef.current?.clientWidth ?? 320
+    const finalX = cw / 2 - (targetIndex * REEL_STEP + REEL_CELL / 2)
+    const startX = cw / 2 - REEL_CELL / 2
+
+    if (reduced) {
+      setTx(finalX)
+      setLanded(true)
+      const t = setTimeout(onDone, 450)
+      return () => clearTimeout(t)
+    }
+
+    setTx(startX)
+    const r1 = requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        setAnimate(true)
+        setTx(finalX)
+      }),
+    )
+    const landT = setTimeout(() => setLanded(true), 1600)
+    const doneT = setTimeout(onDone, 2150)
     return () => {
-      clearInterval(iv)
-      clearTimeout(stop)
+      cancelAnimationFrame(r1)
+      clearTimeout(landT)
+      clearTimeout(doneT)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const g = genMeta(display.gen)
+  const g = genMeta(target.gen)
+  const cat = CAT_BY_KEY[target.category]
   return (
-    <Screen center style={eraVars(display.gen)}>
+    <Screen center style={eraVars(target.gen)}>
       <div className="text-center">
-        <p className="mb-6 font-display text-2xl font-bold text-white/70">Lucky Dip…</p>
-        <div
-          className={`mx-auto flex h-44 w-44 flex-col items-center justify-center rounded-3xl ${
-            settled ? 'animate-popIn' : ''
-          }`}
-          style={{ background: `linear-gradient(135deg, ${g.accent}, ${g.accentSoft})` }}
-        >
-          <span className="text-5xl">{g.emoji}</span>
-          <span className="mt-2 font-display text-xl font-extrabold text-black">{g.short}</span>
-          <span className="text-sm font-bold text-black/70">
-            {CAT_BY_KEY[display.category].emoji} {CAT_BY_KEY[display.category].label}
-          </span>
+        <p className="mb-6 font-display text-2xl font-extrabold text-white/80">
+          {isLucky ? '🎰 Lucky Dip' : 'Spinning up your question…'}
+        </p>
+
+        <div ref={containerRef} className="relative h-32 w-full overflow-hidden">
+          {/* the reel track */}
+          <div
+            className="absolute left-0 top-1/2 flex -translate-y-1/2"
+            style={{
+              transform: `translate(${tx}px, -50%)`,
+              transition: animate ? 'transform 1.55s cubic-bezier(0.12, 0.78, 0.12, 1)' : 'none',
+            }}
+          >
+            {cells.map((c, i) => (
+              <ReelCell key={i} cell={c} active={landed && i === targetIndex} />
+            ))}
+          </div>
+          {/* centre marker */}
+          <div
+            className="pointer-events-none absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl border-2 era-accent-border"
+            style={{ left: '50%', width: REEL_CELL + 8, height: REEL_CELL + 8 }}
+          />
+          <div
+            className="pointer-events-none absolute -translate-x-1/2 era-accent-text"
+            style={{ left: '50%', top: 2 }}
+          >
+            ▼
+          </div>
+          {/* edge fades */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-[var(--era-ink)] to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[var(--era-ink)] to-transparent" />
         </div>
-        {settled && <p className="mt-6 animate-flyUp font-bold text-white">Here we go!</p>}
+
+        <p
+          className={`mt-6 font-display text-xl font-extrabold text-white ${
+            landed ? 'animate-flyUp' : 'opacity-0'
+          }`}
+        >
+          {g.emoji} {g.short} · {cat.emoji} {cat.label}
+        </p>
       </div>
     </Screen>
   )
@@ -216,25 +326,21 @@ export function QuestionScreen({ state, dispatch, onSkip }) {
 
   return (
     <Screen style={eraVars(cur.gen)}>
-      {/* header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-xs font-bold uppercase tracking-wider text-white/40">
-            {roundLabel(state)} · {questionCounter(state)}
-          </div>
-          <TeamPill team={team} score={team.score} className="mt-1" />
-        </div>
-        {state.timerSeconds > 0 && timerOn && <TimerRing seconds={left} total={state.timerSeconds} />}
-      </div>
+      <PlayStatus state={state} roundName={ROUND_NAMES[cur.roundKind]} />
 
-      {/* badge + points + difficulty */}
-      <div className="mt-5 flex items-center justify-between">
+      {/* badge + timer + points + difficulty */}
+      <div className="mt-4 flex items-center justify-between gap-2">
         <GenBadge genKey={cur.gen} category={cur.category} />
-        <div className="flex flex-col items-end gap-1">
-          <span className="rounded-lg bg-ink-800 px-3 py-1.5 font-display text-sm font-extrabold era-accent-text">
-            {points}
-          </span>
-          <DifficultyPips difficulty={q.difficulty} />
+        <div className="flex items-center gap-2">
+          {state.timerSeconds > 0 && timerOn && (
+            <TimerRing seconds={left} total={state.timerSeconds} />
+          )}
+          <div className="flex flex-col items-end gap-1">
+            <span className="rounded-lg bg-ink-800 px-3 py-1.5 font-display text-sm font-extrabold era-accent-text">
+              {points}
+            </span>
+            <DifficultyPips difficulty={q.difficulty} />
+          </div>
         </div>
       </div>
 
@@ -274,14 +380,15 @@ export function JudgeScreen({ state, dispatch }) {
   const cur = state.current
   return (
     <Screen style={eraVars(cur.gen)}>
-      <div className="mt-2 flex items-center justify-between">
+      <PlayStatus state={state} roundName={ROUND_NAMES[cur.roundKind]} />
+
+      <div className="mt-4">
         <GenBadge genKey={cur.gen} category={cur.category} />
-        <TeamPill team={team} score={team.score} />
       </div>
 
-      <p className="mt-6 font-display text-lg font-bold leading-snug text-white/80">{cur.question.q}</p>
+      <p className="mt-4 font-display text-lg font-bold leading-snug text-white/80">{cur.question.q}</p>
 
-      <div className="mt-5">
+      <div className="mt-4">
         <AnswerCard question={cur.question} />
       </div>
 
@@ -325,7 +432,8 @@ export function RevealScreen({ state, dispatch }) {
 
   return (
     <Screen style={eraVars(cur.gen)}>
-      <div className="mt-2 flex items-center justify-between">
+      <PlayStatus state={state} roundName={ROUND_NAMES[cur.roundKind]} />
+      <div className="mt-3 flex items-center justify-between">
         <GenBadge genKey={cur.gen} category={cur.category} />
         <span
           className={`animate-popIn font-display text-2xl font-extrabold ${
@@ -336,7 +444,7 @@ export function RevealScreen({ state, dispatch }) {
         </span>
       </div>
 
-      <p className="mt-4 font-display text-base font-bold leading-snug text-white/80">{cur.question.q}</p>
+      <p className="mt-3 font-display text-base font-bold leading-snug text-white/80">{cur.question.q}</p>
       <div className="mt-3">
         <AnswerCard question={cur.question} />
       </div>
@@ -411,13 +519,16 @@ export function StealJudge({ state, dispatch }) {
   const [revealed, setRevealed] = useState(false)
   return (
     <Screen style={eraVars(cur.gen)}>
-      <div className="flex items-center justify-between">
-        <TeamPill team={stealTeam} />
+      <PlayStatus state={state} roundName={ROUND_NAMES[cur.roundKind]} currentId={cur.steal.teamId} />
+      <div className="mt-3 flex items-center justify-between">
+        <span className="font-display text-sm font-bold text-white/80">
+          {stealTeam.name} is stealing
+        </span>
         <span className="rounded-lg bg-ink-800 px-3 py-1.5 font-display text-sm font-extrabold era-accent-text">
           Steal · {Math.ceil(cur.base / 2)} pts
         </span>
       </div>
-      <div className="mt-5">
+      <div className="mt-4">
         <GenBadge genKey={cur.gen} category={cur.category} />
       </div>
       <h2 className="mt-6 font-display text-2xl font-bold leading-snug text-white">{cur.question.q}</h2>
@@ -462,7 +573,8 @@ export function StealReveal({ state, dispatch }) {
     : pick(STEAL_MISS_LINES, state.copyIndex)
   return (
     <Screen style={eraVars(cur.gen)}>
-      <div className="mt-2 flex items-center justify-between">
+      <PlayStatus state={state} roundName={ROUND_NAMES[cur.roundKind]} currentId={cur.steal.teamId} />
+      <div className="mt-3 flex items-center justify-between">
         <GenBadge genKey={cur.gen} category={cur.category} />
         <span
           className={`animate-popIn font-display text-2xl font-extrabold ${

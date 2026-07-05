@@ -123,6 +123,31 @@ describe('wager math', () => {
   })
 })
 
+describe('spinner routing', () => {
+  it('SPINNER_DONE goes to the question on a normal round', () => {
+    let s = startedGame()
+    s = reducer(s, { type: 'SHOW_SPINNER', prepared: q() })
+    expect(s.phase).toBe(PHASE.SPINNER)
+    expect(s.current.question).not.toBeNull()
+    s = reducer(s, { type: 'SPINNER_DONE' })
+    expect(s.phase).toBe(PHASE.QUESTION)
+  })
+
+  it('SPINNER_DONE routes a wager round to the wager screen, keeping the question', () => {
+    let s = startedGame()
+    const teamId = s.current.teamId
+    s = { ...s, teams: s.teams.map((t) => (t.id === teamId ? { ...t, score: 100 } : t)) }
+    s.current.roundKind = ROUND_KIND.WAGER
+    s = reducer(s, { type: 'SHOW_SPINNER', prepared: q({ gen: 'alpha' }) })
+    s = reducer(s, { type: 'SPINNER_DONE' })
+    expect(s.phase).toBe(PHASE.WAGER)
+    s = reducer(s, { type: 'COMMIT_WAGER', pct: 0.5 })
+    expect(s.phase).toBe(PHASE.QUESTION)
+    expect(s.current.question).not.toBeNull() // preserved through the wager
+    expect(s.current.wagerAmount).toBe(50)
+  })
+})
+
 describe('classic finale override', () => {
   it("turns Round 3's final question into a wager", () => {
     let s = initialState()

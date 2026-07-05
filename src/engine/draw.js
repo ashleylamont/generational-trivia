@@ -34,18 +34,33 @@ export function pickTargetGen({ homeGens, mode, rng }) {
   return pickOne(allKeys, rng)
 }
 
-// Choose a difficulty present in the pool, biased by the team's stake weights.
-function pickDifficulty(pool, rng, weights = DEFAULT_DIFFICULTY_WEIGHTS) {
+// Choose a difficulty present in the pool, biased toward harder tiers.
+function pickWeightedDifficulty(pool, rng, weights = DEFAULT_DIFFICULTY_WEIGHTS) {
   const present = [...new Set(pool.map((q) => q.difficulty))]
-  // A tiny floor so a tier is still reachable if the stake zeroed it but it's the
-  // only difficulty available in the pool.
   const items = present.map((d) => ({ weight: (weights[d] ?? 0) + 0.001, value: d }))
   return weightedPick(items, rng)
 }
 
+// The difficulty in the pool closest to the requested tier (so a forced Brutal
+// still returns something when a gen×category cell has no d3 left).
+function nearestDifficulty(pool, target) {
+  const present = [...new Set(pool.map((q) => q.difficulty))]
+  return present.reduce((best, d) =>
+    Math.abs(d - target) < Math.abs(best - target) ? d : best,
+  )
+}
+
 // Draw a single unused question honouring gen/category with the spec's fallback
 // chain. Returns null only if the whole bank is exhausted.
-export function drawQuestion({ bank, usedIds, gen, category, enabledCategories, rng, diffWeights }) {
+export function drawQuestion({
+  bank,
+  usedIds,
+  gen,
+  category,
+  enabledCategories,
+  rng,
+  forceDifficulty,
+}) {
   const isFree = (q) => !usedIds.has(q.id)
   const inEnabled = (q) => !enabledCategories || enabledCategories.includes(q.category)
 
@@ -75,7 +90,9 @@ export function drawQuestion({ bank, usedIds, gen, category, enabledCategories, 
       const minDist = Math.min(...pool.map((q) => Math.abs(GEN_INDEX[q.gen] - target)))
       pool = pool.filter((q) => Math.abs(GEN_INDEX[q.gen] - target) === minDist)
     }
-    const diff = pickDifficulty(pool, rng, diffWeights)
+    const diff = forceDifficulty
+      ? nearestDifficulty(pool, forceDifficulty)
+      : pickWeightedDifficulty(pool, rng)
     const byDiff = pool.filter((q) => q.difficulty === diff)
     return pickOne(byDiff.length ? byDiff : pool, rng)
   }

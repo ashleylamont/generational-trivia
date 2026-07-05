@@ -29,14 +29,18 @@ npm run build    # production build into dist/
 ## How a game works
 
 1. **Set up** 2–4 teams. Each team picks its **home eras** (the generations its players actually
-   come from) — multi-select, because families team up (Grandma + grandkid) — and a **difficulty**:
-   *Standard*, *Hard*, or *Brutal*. Opting into harder questions is a risk/reward lever: tougher
-   questions are worth more points.
-2. Pick a **length** (Quick / Classic / Marathon), a **timer**, and which **categories** are in.
-3. **Every question is read aloud and answered aloud.** The team in the hot seat gets a question
-   read to them; someone starts the timer; they say their answer out loud; then the phone reveals
-   the canonical answer (plus accepted variants) and the room taps **Got it** or **Missed it** on
-   the honour system. No multiple choice — you have to actually know it.
+   come from) — multi-select, because families team up (Grandma + grandkid) — and a **default
+   difficulty** (*Gentle* / *Tricky* / *Brutal*).
+2. Pick a **length** (Quick / Classic / Marathon), a **timer**, whether the **spin-up reel** is on,
+   and which **categories** are in.
+3. **Before each question**, the team in the hot seat picks how hard they want it — *Gentle*,
+   *Tricky*, or *Brutal* (starting from their default) — because harder questions are worth more
+   points. A quick **horizontal reel** then spins and lands on the question's era × category (just
+   for fun; it can be switched off). Then it's **read aloud and answered aloud**: someone reads the question and starts the
+   timer, the team says their answer out loud, and the phone reveals the canonical answer (plus
+   accepted variants) for the room to judge **Got it** / **Missed it** on the honour system. No
+   multiple choice — you have to actually know it. A live scoreboard and progress bar stay on screen
+   the whole time.
 4. Play the rounds:
    - **Round 1 — Home Turf:** questions from your own eras. Base 10 points.
    - **Round 2 — Gen Swap:** questions from eras that aren't yours, weighted toward the furthest.
@@ -45,9 +49,10 @@ npm run build    # production build into dist/
    - **Round 4 — Time Warp Wager** *(Marathon; also the finale of Classic)*: see the era up front,
      wager 0–50% of your score, then answer.
 
-   On top of all of that, **every question adds a difficulty bonus** — `+5` for a medium question,
-   `+10` for a hard one (difficulty is judged relative to the question's own generation). So a team
-   on the *Brutal* stake reliably draws the high-value hard questions.
+   On top of all of that, **every question adds a difficulty bonus** — `+5` for a medium (*Tricky*)
+   question, `+10` for a hard (*Brutal*) one (difficulty is judged relative to the question's own
+   generation). So picking *Brutal* before a question is a live risk/reward call: tougher, but worth
+   more.
 5. **Steals:** a missed answer (not a timeout) can be offered to another team, who call out an
    answer for the reader to judge — a correct steal is worth half points.
 6. **Skips:** one per team per round. **Ties** at the end trigger sudden death.
