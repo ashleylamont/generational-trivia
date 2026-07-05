@@ -1,6 +1,6 @@
 import React from 'react'
 import { genMeta } from './era.js'
-import { CAT_BY_KEY } from '../engine/constants.js'
+import { CAT_BY_KEY, DIFFICULTY_LABELS, MAX_DIFFICULTY } from '../engine/constants.js'
 
 // ---- Buttons ----------------------------------------------------------------
 export function Btn({ children, onClick, variant = 'primary', className = '', disabled, ...rest }) {
@@ -49,23 +49,21 @@ export function GenBadge({ genKey, category, size = 'md' }) {
 }
 
 // ---- Difficulty indicator ---------------------------------------------------
-const DIFF_LABEL = { 1: 'Gentle', 2: 'Tricky', 3: 'Brutal' }
-
 export function DifficultyPips({ difficulty, showLabel = true }) {
   return (
     <span
       className="inline-flex items-center gap-1 text-[11px] font-bold text-white/55"
-      title={`Difficulty ${difficulty} of 3`}
+      title={`Difficulty ${difficulty} of ${MAX_DIFFICULTY}`}
     >
       <span className="inline-flex items-center gap-0.5">
-        {[1, 2, 3].map((i) => (
+        {Array.from({ length: MAX_DIFFICULTY }, (_, k) => k + 1).map((i) => (
           <span
             key={i}
             className={`h-1.5 w-1.5 rounded-full ${i <= difficulty ? 'era-accent-bg' : 'bg-white/20'}`}
           />
         ))}
       </span>
-      {showLabel && <span>{DIFF_LABEL[difficulty]}</span>}
+      {showLabel && <span>{DIFFICULTY_LABELS[difficulty]}</span>}
     </span>
   )
 }

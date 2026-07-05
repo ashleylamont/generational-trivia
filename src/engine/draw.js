@@ -2,9 +2,9 @@ import { GENERATIONS, GEN_INDEX } from './constants.js'
 import { generationDistance } from './scoring.js'
 import { weightedPick, pickOne } from './rng.js'
 
-// Default difficulty mix (the "Standard" stake) — skews harder than a typical
-// quiz. Teams can override this via their chosen stake (see STAKES).
-const DEFAULT_DIFFICULTY_WEIGHTS = { 1: 0.2, 2: 0.45, 3: 0.35 }
+// Default difficulty mix for unforced draws (e.g. sudden death) — skews hard.
+// Normal play forces the team's chosen tier instead.
+const DEFAULT_DIFFICULTY_WEIGHTS = { 1: 0.1, 2: 0.3, 3: 0.35, 4: 0.25 }
 
 // Pick which generation a question should come from, given the answering team's
 // home generations and the round's draw mode.

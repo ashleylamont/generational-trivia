@@ -15,9 +15,9 @@ export function generationDistance(questionGen, homeGens) {
 }
 
 // Harder questions are worth more, so opting into tougher questions pays off:
-// d1 +0, d2 +5, d3 +10. Difficulty is relative to the question's own generation.
+// d1 +0, d2 +5, d3 +10, d4 +15. Difficulty is relative to the question's own gen.
 export function difficultyBonus(difficulty) {
-  return (Math.max(1, Math.min(3, difficulty || 1)) - 1) * 5
+  return (Math.max(1, Math.min(4, difficulty || 1)) - 1) * 5
 }
 
 // Base points on offer for a question, before steals/wagers.
