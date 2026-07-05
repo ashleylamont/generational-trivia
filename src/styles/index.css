@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Active-era accent — overwritten inline per question via --era-* variables. */
+  --era-accent: #f59e0b;
+  --era-accent-soft: #b45309;
+  --era-ink: #0d0f14;
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--era-ink);
+  color: #f4f5f7;
+  font-family: '"Nunito Sans"', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* Prevent rubber-band scroll spoiling the pass-and-play feel. */
+  overscroll-behavior: none;
+}
+
+/* Base readable sizing for arm's-length lounge-room play. */
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* The era accent glow used behind the active generation's screens. */
+.era-wash {
+  background:
+    radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--era-accent) 22%, transparent), transparent 70%),
+    var(--era-ink);
+}
+
+.era-accent-text {
+  color: var(--era-accent);
+}
+
+.era-accent-bg {
+  background-color: var(--era-accent);
+}
+
+.era-accent-border {
+  border-color: var(--era-accent);
+}
+
+/* Answer buttons: fat-finger-proof, high contrast. */
+.answer-btn {
+  min-height: 60px;
+  transition: transform 120ms ease, background-color 120ms ease, border-color 120ms ease;
+}
+.answer-btn:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
