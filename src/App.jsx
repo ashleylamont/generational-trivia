@@ -58,7 +58,9 @@ export default function App() {
     const kind = state.current.roundKind
     const prepared = drawForTurn(kind)
     if (!prepared) return
-    if (kind === 'lucky') dispatch({ type: 'SHOW_SPINNER', prepared })
+    // The spinner (when on) reveals the era × category, then routes to the
+    // wager screen or straight to the question.
+    if (state.spinnerOn) dispatch({ type: 'SHOW_SPINNER', prepared })
     else if (kind === 'wager') dispatch({ type: 'SHOW_WAGER', prepared })
     else dispatch({ type: 'PRESENT_QUESTION', prepared })
   }
@@ -113,7 +115,7 @@ export default function App() {
       case PHASE.HANDOFF:
         return <Handoff state={state} dispatch={dispatch} onReady={handleReady} />
       case PHASE.SPINNER:
-        return <Spinner state={state} onDone={() => dispatch({ type: 'REVEAL_SPINNER' })} />
+        return <Spinner state={state} onDone={() => dispatch({ type: 'SPINNER_DONE' })} />
       case PHASE.WAGER:
         return <WagerScreen state={state} dispatch={dispatch} />
       case PHASE.QUESTION:

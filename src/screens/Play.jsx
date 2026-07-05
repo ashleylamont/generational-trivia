@@ -100,54 +100,138 @@ export function Handoff({ state, dispatch, onReady }) {
   )
 }
 
-// ---- Lucky Dip spinner ------------------------------------------------------
+// ---- Horizontal reel spinner (runs before every question, for fun) ----------
+const REEL_CELL = 116 // px
+const REEL_GAP = 10
+const REEL_STEP = REEL_CELL + REEL_GAP
+
+function buildReel(target) {
+  const gens = GENERATIONS
+  const cats = CATEGORIES
+  const rand = () => ({
+    gen: gens[Math.floor(Math.random() * gens.length)].key,
+    category: cats[Math.floor(Math.random() * cats.length)].key,
+  })
+  const cells = []
+  for (let i = 0; i < 18; i++) cells.push(rand())
+  const targetIndex = cells.length
+  cells.push({ gen: target.gen, category: target.category })
+  for (let i = 0; i < 3; i++) cells.push(rand())
+  return { cells, targetIndex }
+}
+
+function ReelCell({ cell, active }) {
+  const g = genMeta(cell.gen)
+  const cat = CAT_BY_KEY[cell.category]
+  return (
+    <div
+      className={`flex flex-col items-center justify-center rounded-2xl transition-transform ${
+        active ? 'scale-105' : 'opacity-80'
+      }`}
+      style={{
+        width: REEL_CELL,
+        height: REEL_CELL,
+        marginRight: REEL_GAP,
+        flex: '0 0 auto',
+        background: `linear-gradient(135deg, ${g.accent}, ${g.accentSoft})`,
+      }}
+    >
+      <span className="text-3xl leading-none">{g.emoji}</span>
+      <span className="mt-1 font-display text-sm font-extrabold text-black">{g.short}</span>
+      <span className="mt-0.5 text-[11px] font-bold text-black/70">
+        {cat.emoji} {cat.label}
+      </span>
+    </div>
+  )
+}
+
 export function Spinner({ state, onDone }) {
   const target = { gen: state.current.gen, category: state.current.category }
-  const [display, setDisplay] = useState({ gen: 'boomer', category: 'music' })
-  const [settled, setSettled] = useState(false)
+  const isLucky = state.current.roundKind === ROUND_KIND.LUCKY
+  const containerRef = useRef(null)
+  const reelRef = useRef(null)
+  if (!reelRef.current) reelRef.current = buildReel(target)
+  const { cells, targetIndex } = reelRef.current
+
+  const [tx, setTx] = useState(0)
+  const [animate, setAnimate] = useState(false)
+  const [landed, setLanded] = useState(false)
 
   useEffect(() => {
-    let i = 0
-    const gens = GENERATIONS.map((g) => g.key)
-    const cats = CATEGORIES.map((c) => c.key)
-    const iv = setInterval(() => {
-      i++
-      setDisplay({
-        gen: gens[Math.floor(Math.random() * gens.length)],
-        category: cats[Math.floor(Math.random() * cats.length)],
-      })
-    }, 90)
-    const stop = setTimeout(() => {
-      clearInterval(iv)
-      setDisplay(target)
-      setSettled(true)
-      setTimeout(onDone, 900)
-    }, 1700)
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+    const cw = containerRef.current?.clientWidth ?? 320
+    const finalX = cw / 2 - (targetIndex * REEL_STEP + REEL_CELL / 2)
+    const startX = cw / 2 - REEL_CELL / 2
+
+    if (reduced) {
+      setTx(finalX)
+      setLanded(true)
+      const t = setTimeout(onDone, 450)
+      return () => clearTimeout(t)
+    }
+
+    setTx(startX)
+    const r1 = requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        setAnimate(true)
+        setTx(finalX)
+      }),
+    )
+    const landT = setTimeout(() => setLanded(true), 1600)
+    const doneT = setTimeout(onDone, 2150)
     return () => {
-      clearInterval(iv)
-      clearTimeout(stop)
+      cancelAnimationFrame(r1)
+      clearTimeout(landT)
+      clearTimeout(doneT)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const g = genMeta(display.gen)
+  const g = genMeta(target.gen)
+  const cat = CAT_BY_KEY[target.category]
   return (
-    <Screen center style={eraVars(display.gen)}>
+    <Screen center style={eraVars(target.gen)}>
       <div className="text-center">
-        <p className="mb-6 font-display text-2xl font-bold text-white/70">Lucky Dip…</p>
-        <div
-          className={`mx-auto flex h-44 w-44 flex-col items-center justify-center rounded-3xl ${
-            settled ? 'animate-popIn' : ''
-          }`}
-          style={{ background: `linear-gradient(135deg, ${g.accent}, ${g.accentSoft})` }}
-        >
-          <span className="text-5xl">{g.emoji}</span>
-          <span className="mt-2 font-display text-xl font-extrabold text-black">{g.short}</span>
-          <span className="text-sm font-bold text-black/70">
-            {CAT_BY_KEY[display.category].emoji} {CAT_BY_KEY[display.category].label}
-          </span>
+        <p className="mb-6 font-display text-2xl font-extrabold text-white/80">
+          {isLucky ? '🎰 Lucky Dip' : 'Spinning up your question…'}
+        </p>
+
+        <div ref={containerRef} className="relative h-32 w-full overflow-hidden">
+          {/* the reel track */}
+          <div
+            className="absolute left-0 top-1/2 flex -translate-y-1/2"
+            style={{
+              transform: `translate(${tx}px, -50%)`,
+              transition: animate ? 'transform 1.55s cubic-bezier(0.12, 0.78, 0.12, 1)' : 'none',
+            }}
+          >
+            {cells.map((c, i) => (
+              <ReelCell key={i} cell={c} active={landed && i === targetIndex} />
+            ))}
+          </div>
+          {/* centre marker */}
+          <div
+            className="pointer-events-none absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl border-2 era-accent-border"
+            style={{ left: '50%', width: REEL_CELL + 8, height: REEL_CELL + 8 }}
+          />
+          <div
+            className="pointer-events-none absolute -translate-x-1/2 era-accent-text"
+            style={{ left: '50%', top: 2 }}
+          >
+            ▼
+          </div>
+          {/* edge fades */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-[var(--era-ink)] to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[var(--era-ink)] to-transparent" />
         </div>
-        {settled && <p className="mt-6 animate-flyUp font-bold text-white">Here we go!</p>}
+
+        <p
+          className={`mt-6 font-display text-xl font-extrabold text-white ${
+            landed ? 'animate-flyUp' : 'opacity-0'
+          }`}
+        >
+          {g.emoji} {g.short} · {cat.emoji} {cat.label}
+        </p>
       </div>
     </Screen>
   )

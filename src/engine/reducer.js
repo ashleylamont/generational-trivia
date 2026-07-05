@@ -61,6 +61,7 @@ export function initialState() {
     lengthKey: 'classic',
     timerKey: 'relaxed',
     enabledCategories: CATEGORIES.map((c) => c.key),
+    spinnerOn: true,
     // Derived from length at START_GAME.
     numRounds: GAME_LENGTHS.classic.rounds,
     questionsPerTeam: GAME_LENGTHS.classic.questionsPerTeam,
@@ -151,7 +152,6 @@ function beginTurn(state) {
       roundKind: kindForTurn(state),
       chosenDifficulty: team?.defaultDifficulty ?? DEFAULT_DIFFICULTY,
       question: null,
-      pendingQuestion: null,
       gen: null,
       category: null,
       distance: 0,
@@ -349,6 +349,8 @@ export function reducer(state, action) {
       return { ...state, lengthKey: action.key }
     case 'SET_TIMER':
       return { ...state, timerKey: action.key }
+    case 'TOGGLE_SPINNER':
+      return { ...state, spinnerOn: !state.spinnerOn }
     case 'TOGGLE_CATEGORY': {
       const has = state.enabledCategories.includes(action.key)
       if (has && state.enabledCategories.length <= 3) return state // min 3
@@ -428,8 +430,12 @@ export function reducer(state, action) {
         },
       }
     }
-    case 'REVEAL_SPINNER':
-      return { ...state, phase: PHASE.QUESTION }
+    // Spinner has landed — go to the wager screen (wager rounds) or the question.
+    case 'SPINNER_DONE':
+      return {
+        ...state,
+        phase: state.current.roundKind === ROUND_KIND.WAGER ? PHASE.WAGER : PHASE.QUESTION,
+      }
 
     case 'SHOW_WAGER': {
       const p = action.prepared
@@ -440,7 +446,7 @@ export function reducer(state, action) {
         usedIds: new Set(state.usedIds).add(p.id),
         current: {
           ...state.current,
-          pendingQuestion: p,
+          question: p, // wager screen shows only gen/category/points, not the text
           gen: p.gen,
           category: p.category,
           distance,
@@ -456,7 +462,6 @@ export function reducer(state, action) {
         phase: PHASE.QUESTION,
         current: {
           ...state.current,
-          question: state.current.pendingQuestion,
           wagerPct: action.pct,
           wagerAmount,
         },

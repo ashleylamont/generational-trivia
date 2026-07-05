@@ -202,6 +202,19 @@ export function OptionsSetup({ state, dispatch, onBack, onStart }) {
         </div>
       </Section>
 
+      <Section label="Spin-up animation">
+        <div className="grid grid-cols-2 gap-2">
+          <Toggle active={state.spinnerOn} onClick={() => !state.spinnerOn && dispatch({ type: 'TOGGLE_SPINNER' })}>
+            <div className="font-display text-sm">🎰 On</div>
+            <div className="text-[11px] opacity-70">reel before each Q</div>
+          </Toggle>
+          <Toggle active={!state.spinnerOn} onClick={() => state.spinnerOn && dispatch({ type: 'TOGGLE_SPINNER' })}>
+            <div className="font-display text-sm">Off</div>
+            <div className="text-[11px] opacity-70">straight to the question</div>
+          </Toggle>
+        </div>
+      </Section>
+
       <Section label={`Categories (${state.enabledCategories.length} on · min 3)`}>
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((c) => {

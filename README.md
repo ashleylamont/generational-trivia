@@ -31,10 +31,12 @@ npm run build    # production build into dist/
 1. **Set up** 2–4 teams. Each team picks its **home eras** (the generations its players actually
    come from) — multi-select, because families team up (Grandma + grandkid) — and a **default
    difficulty** (*Gentle* / *Tricky* / *Brutal*).
-2. Pick a **length** (Quick / Classic / Marathon), a **timer**, and which **categories** are in.
+2. Pick a **length** (Quick / Classic / Marathon), a **timer**, whether the **spin-up reel** is on,
+   and which **categories** are in.
 3. **Before each question**, the team in the hot seat picks how hard they want it — *Gentle*,
    *Tricky*, or *Brutal* (starting from their default) — because harder questions are worth more
-   points. Then it's **read aloud and answered aloud**: someone reads the question and starts the
+   points. A quick **horizontal reel** then spins and lands on the question's era × category (just
+   for fun; it can be switched off). Then it's **read aloud and answered aloud**: someone reads the question and starts the
    timer, the team says their answer out loud, and the phone reveals the canonical answer (plus
    accepted variants) for the room to judge **Got it** / **Missed it** on the honour system. No
    multiple choice — you have to actually know it. A live scoreboard and progress bar stay on screen
