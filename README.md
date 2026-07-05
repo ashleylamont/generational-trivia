@@ -1,5 +1,7 @@
 # Era Clash 📻📼💾📱🎮
 
+> note from ashley: this is a quick app that I smashed together almost entirely with claude - quality and accuracy may vary.
+
 A multigenerational Aussie family quiz — pass-and-play on one phone, Boomers → Gen Alpha.
 
 **The hook:** you score more for knowing eras that *aren't* yours. A 12-year-old nailing a Boomer
