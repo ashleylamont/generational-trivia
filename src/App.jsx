@@ -3,7 +3,6 @@ import { reducer, initialState, PHASE, currentTeam, drawModeForKind } from './en
 import { drawQuestion, pickTargetGen } from './engine/draw.js'
 import { prepareQuestion } from './engine/prepare.js'
 import { mulberry32, randomSeed, pickOne } from './engine/rng.js'
-import { STAKES } from './engine/constants.js'
 import QUESTION_BANK from './data/questions/index.js'
 
 import { TitleScreen, TeamSetup, OptionsSetup } from './screens/Setup.jsx'
@@ -50,7 +49,7 @@ export default function App() {
       category,
       enabledCategories: state.enabledCategories,
       rng,
-      diffWeights: STAKES[team.stake]?.weights,
+      forceDifficulty: state.current?.chosenDifficulty,
     })
     return raw ? prepareQuestion(raw) : null
   }
@@ -112,7 +111,7 @@ export default function App() {
       case PHASE.ROUND_INTRO:
         return <RoundIntro state={state} dispatch={dispatch} />
       case PHASE.HANDOFF:
-        return <Handoff state={state} onReady={handleReady} />
+        return <Handoff state={state} dispatch={dispatch} onReady={handleReady} />
       case PHASE.SPINNER:
         return <Spinner state={state} onDone={() => dispatch({ type: 'REVEAL_SPINNER' })} />
       case PHASE.WAGER:

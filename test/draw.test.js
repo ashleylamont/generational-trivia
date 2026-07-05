@@ -61,25 +61,42 @@ describe('drawQuestion', () => {
     expect(q.category).toBe('music')
   })
 
-  it('Brutal stake weights skew the draw toward d3', () => {
+  it('forceDifficulty draws exactly that tier when available', () => {
     const bank = stubBank() // 3 questions per gen×cat, difficulties 1/2/3
     const rng = mulberry32(42)
-    const brutal = { 1: 0, 2: 0.2, 3: 0.8 }
-    let d3 = 0
-    const N = 60
-    for (let i = 0; i < N; i++) {
+    for (let i = 0; i < 20; i++) {
       const q = drawQuestion({
         bank,
-        usedIds: new Set(), // fresh pool each draw so weights (not exhaustion) decide
+        usedIds: new Set(), // fresh pool so difficulty (not exhaustion) decides
         gen: 'genz',
         category: 'music',
         enabledCategories: ['music'],
         rng,
-        diffWeights: brutal,
+        forceDifficulty: 3,
       })
-      if (q.difficulty === 3) d3++
+      expect(q.difficulty).toBe(3)
     }
-    expect(d3 / N).toBeGreaterThan(0.6) // heavily favours the hardest tier
+  })
+
+  it('forceDifficulty falls back to the nearest tier when the exact one is gone', () => {
+    const bank = stubBank()
+    const rng = mulberry32(5)
+    // Use up every d3 genz/music question, then force Brutal — should get d2 (nearest).
+    const used = new Set(
+      bank.filter((q) => q.gen === 'genz' && q.category === 'music' && q.difficulty === 3).map((q) => q.id),
+    )
+    const q = drawQuestion({
+      bank,
+      usedIds: used,
+      gen: 'genz',
+      category: 'music',
+      enabledCategories: ['music'],
+      rng,
+      forceDifficulty: 3,
+    })
+    expect(q.gen).toBe('genz')
+    expect(q.category).toBe('music')
+    expect(q.difficulty).toBe(2)
   })
 
   it('never repeats when drawing the whole bank', () => {

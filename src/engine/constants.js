@@ -119,32 +119,15 @@ export const ROUND_KIND = {
 
 export const WAGER_PRESETS = [0, 0.1, 0.25, 0.5]
 
-// Per-team difficulty opt-in. A team can choose to face harder questions, which
-// are worth more (via the difficulty bonus in scoring). `weights` bias which
-// difficulty tier gets drawn from each generation's pool. Standard already skews
-// harder than a typical quiz; Hard/Brutal chase the high-value d3 questions.
-export const STAKES = {
-  standard: {
-    key: 'standard',
-    label: 'Standard',
-    emoji: '🙂',
-    hint: 'A fair, testing mix',
-    weights: { 1: 0.2, 2: 0.45, 3: 0.35 },
-  },
-  hard: {
-    key: 'hard',
-    label: 'Hard',
-    emoji: '😤',
-    hint: 'Tougher questions · more points',
-    weights: { 1: 0.05, 2: 0.4, 3: 0.55 },
-  },
-  brutal: {
-    key: 'brutal',
-    label: 'Brutal',
-    emoji: '💀',
-    hint: 'Brutal questions · max points',
-    weights: { 1: 0, 2: 0.2, 3: 0.8 },
-  },
-}
+// Difficulty tiers. Teams choose one before each question (defaulting to their
+// setup pick) — harder tiers draw harder questions worth more points.
+export const DIFFICULTIES = [
+  { level: 1, label: 'Gentle', emoji: '🙂', bonus: 0, hint: 'easier · base points' },
+  { level: 2, label: 'Tricky', emoji: '😤', bonus: 5, hint: 'medium · +5 points' },
+  { level: 3, label: 'Brutal', emoji: '💀', bonus: 10, hint: 'hard · +10 points' },
+]
 
-export const DEFAULT_STAKE = 'standard'
+export const DIFF_BY_LEVEL = Object.fromEntries(DIFFICULTIES.map((d) => [d.level, d]))
+
+// Sensible default: a bit harder than a warm-up.
+export const DEFAULT_DIFFICULTY = 2

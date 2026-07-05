@@ -84,6 +84,59 @@ export function TeamPill({ team, score, className = '' }) {
   )
 }
 
+// ---- Live scoreboard strip (always visible during play) ---------------------
+export function ScoreStrip({ teams, currentId }) {
+  const sorted = [...teams].sort((a, b) => b.score - a.score)
+  return (
+    <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+      {sorted.map((t) => (
+        <span
+          key={t.id}
+          className={`flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold ${
+            t.id === currentId ? 'ring-2 ring-white/80' : ''
+          }`}
+          style={{ background: `${t.color}26`, border: `1px solid ${t.color}` }}
+        >
+          <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: t.color }} />
+          <span className="max-w-[84px] truncate text-white/90">{t.name}</span>
+          <span className="tabular-nums text-white">{t.score}</span>
+        </span>
+      ))}
+    </div>
+  )
+}
+
+// Compact status header for play screens: overall progress + live scores.
+export function PlayStatus({ state, roundName, currentId }) {
+  const perRound = state.questionsPerTeam * state.teams.length
+  const qNum = state.roundIndex * perRound + state.turnPos + 1
+  const total = state.numRounds * perRound
+  const pct = Math.min(100, Math.round((qNum / total) * 100))
+  const active = currentId ?? state.current?.teamId
+  return (
+    <div className="shrink-0">
+      <div className="mb-1 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-white/45">
+        <span>
+          Round {state.roundIndex + 1}/{state.numRounds}
+          {roundName ? ` · ${roundName}` : ''}
+        </span>
+        <span>
+          Q {qNum}/{total}
+        </span>
+      </div>
+      <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
+        <div
+          className="h-full rounded-full era-accent-bg transition-all"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="mt-2">
+        <ScoreStrip teams={state.teams} currentId={active} />
+      </div>
+    </div>
+  )
+}
+
 // ---- Leaderboard ------------------------------------------------------------
 export function Leaderboard({ teams, deltas, highlightId }) {
   const sorted = [...teams].sort((a, b) => b.score - a.score)

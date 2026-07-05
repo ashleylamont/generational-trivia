@@ -7,7 +7,7 @@ import {
   TIMER_OPTIONS,
   ROUND_KIND,
   GEN_INDEX,
-  DEFAULT_STAKE,
+  DEFAULT_DIFFICULTY,
 } from './constants.js'
 import { generationDistance, basePoints, stealPoints, clampWager, resolveWager } from './scoring.js'
 
@@ -48,7 +48,7 @@ function makeTeam(i) {
     name: DEFAULT_TEAM_NAMES[i % DEFAULT_TEAM_NAMES.length],
     homeGens: [...(DEFAULT_HOMEGENS[i] || ['millennial'])],
     color: TEAM_COLORS[i % TEAM_COLORS.length],
-    stake: DEFAULT_STAKE,
+    defaultDifficulty: DEFAULT_DIFFICULTY,
     score: 0,
     skipsLeft: 1,
   }
@@ -142,12 +142,14 @@ function startRound(state, roundIndex) {
 
 function beginTurn(state) {
   const teamId = state.turnOrder[state.turnPos]
+  const team = state.teams.find((t) => t.id === teamId)
   return {
     ...state,
     phase: PHASE.HANDOFF,
     current: {
       teamId,
       roundKind: kindForTurn(state),
+      chosenDifficulty: team?.defaultDifficulty ?? DEFAULT_DIFFICULTY,
       question: null,
       pendingQuestion: null,
       gen: null,
@@ -329,13 +331,18 @@ export function reducer(state, action) {
           return { ...t, color: TEAM_COLORS[(i + 1) % TEAM_COLORS.length] }
         }),
       }
-    case 'SET_STAKE':
+    case 'SET_DEFAULT_DIFFICULTY':
       return {
         ...state,
         teams: state.teams.map((t) =>
-          t.id === action.teamId ? { ...t, stake: action.stake } : t,
+          t.id === action.teamId ? { ...t, defaultDifficulty: action.level } : t,
         ),
       }
+    // Per-question difficulty choice on the handoff screen.
+    case 'SET_QUESTION_DIFFICULTY':
+      return state.current
+        ? { ...state, current: { ...state.current, chosenDifficulty: action.level } }
+        : state
 
     // -- Options --------------------------------------------------------------
     case 'SET_LENGTH':
