@@ -43,8 +43,8 @@ export function RoundIntro({ state, dispatch }) {
         <div className="text-xs font-bold uppercase tracking-widest text-white/40">
           Round {state.roundIndex + 1} of {state.numRounds}
         </div>
-        <div className="mt-4 text-6xl">{info.emoji}</div>
-        <h1 className="mt-3 font-display text-5xl font-extrabold text-white">{info.name}</h1>
+        <div className="mt-4 text-5xl sm:text-6xl">{info.emoji}</div>
+        <h1 className="mt-3 font-display t-h1 font-extrabold text-white">{info.name}</h1>
         <p className="mx-auto mt-4 max-w-xs text-white/70">{info.blurb}</p>
         <div className="mx-auto mt-4 inline-block rounded-xl bg-ink-800 px-4 py-2 text-sm font-bold era-accent-text">
           {info.scoring}
@@ -55,7 +55,7 @@ export function RoundIntro({ state, dispatch }) {
           </p>
         )}
       </div>
-      <div className="mt-10">
+      <div className="mt-8">
         <Btn onClick={() => dispatch({ type: 'BEGIN_TURN' })}>Let’s go</Btn>
       </div>
     </Screen>
@@ -73,7 +73,7 @@ export function RoundSummary({ state, dispatch }) {
       <div className="mb-1 text-center text-xs font-bold uppercase tracking-widest text-white/40">
         End of Round {state.roundIndex + 1}
       </div>
-      <h1 className="mb-5 text-center font-display text-4xl font-extrabold text-white">Standings</h1>
+      <h1 className="mb-4 text-center font-display t-h1 font-extrabold text-white">Standings</h1>
       <Leaderboard teams={state.teams} deltas={deltas} />
       <div className="mt-5 rounded-2xl bg-ink-800 p-4 text-center">
         <p className="font-display text-lg font-bold text-white/90">{banterForStandings(sorted)}</p>
@@ -129,8 +129,8 @@ export function FinalResults({ state, dispatch }) {
   return (
     <Screen style={{ '--era-accent': '#f59e0b', '--era-accent-soft': '#b45309' }}>
       <div className="text-center">
-        <div className="text-5xl">🏆</div>
-        <h1 className="mt-2 font-display text-4xl font-extrabold text-white">
+        <div className="text-4xl sm:text-5xl">🏆</div>
+        <h1 className="mt-2 font-display t-h1 font-extrabold text-white">
           {joint ? 'Joint winners!' : 'Winner!'}
         </h1>
         <p className="mt-1 font-display text-2xl font-extrabold era-accent-text">
@@ -138,18 +138,18 @@ export function FinalResults({ state, dispatch }) {
         </p>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-5">
         <Podium teams={state.teams} winners={winners} />
       </div>
 
       {awards.length > 0 && (
-        <div className="mt-7">
+        <div className="mt-5">
           <div className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-white/40">
             Awards
           </div>
           <div className="flex flex-col gap-2">
             {awards.map((a) => (
-              <div key={a.key} className="flex items-center gap-3 rounded-2xl bg-ink-800 px-4 py-3">
+              <div key={a.key} className="flex items-center gap-3 rounded-2xl bg-ink-800 px-4 py-2.5">
                 <span className="text-2xl">{a.emoji}</span>
                 <div className="min-w-0 flex-1">
                   <div className="font-display text-base font-bold text-white">{a.title}</div>
@@ -181,8 +181,8 @@ export function TiebreakIntro({ state, dispatch }) {
   return (
     <Screen center style={eraVars(state.tiebreak.gen)}>
       <div className="text-center">
-        <div className="text-6xl">⚔️</div>
-        <h1 className="mt-3 font-display text-4xl font-extrabold text-white">Sudden death!</h1>
+        <div className="text-5xl sm:text-6xl">⚔️</div>
+        <h1 className="mt-3 font-display t-h1 font-extrabold text-white">Sudden death!</h1>
         <p className="mt-2 text-white/70">It’s a dead heat between:</p>
         <div className="mt-3 flex flex-wrap justify-center gap-2">
           {tied.map((t) => (
@@ -206,13 +206,13 @@ export function TiebreakHandoff({ state, onReady }) {
   const team = state.teams.find((t) => t.id === tb.teamIds[tb.pos])
   return (
     <div
-      className="grid min-h-full w-full place-items-center px-6 text-center"
+      className="grid h-[100dvh] w-full place-items-center overflow-y-auto px-6 py-6 text-center"
       style={{ background: `linear-gradient(160deg, ${team.color}cc, ${team.color}55), #0d0f14` }}
     >
       <div>
         <div className="text-5xl">⚔️</div>
         <p className="mt-3 text-lg font-bold text-white/80">Sudden death · pass to</p>
-        <h1 className="mt-1 font-display text-5xl font-extrabold text-white">{team.name}</h1>
+        <h1 className="mt-1 font-display t-h1 font-extrabold text-white">{team.name}</h1>
         <div className="mt-8 w-64">
           <Btn onClick={onReady} style={eraVars(tb.gen)}>
             We’re ready
@@ -237,10 +237,10 @@ export function TiebreakQuestion({ state, dispatch }) {
       <div className="mt-5">
         <GenBadge genKey={tb.gen} category={q.category} />
       </div>
-      <p className="mt-6 text-xs font-bold uppercase tracking-widest text-white/40">Read this aloud</p>
-      <h2 className="mt-2 font-display text-2xl font-bold leading-snug text-white">{q.q}</h2>
+      <p className="mt-5 text-xs font-bold uppercase tracking-widest text-white/40">Read this aloud</p>
+      <h2 className="mt-2 font-display t-question font-bold text-white">{q.q}</h2>
 
-      <div className="flex-1" />
+      <div className="min-h-4 flex-1" />
 
       {!revealed ? (
         <Btn onClick={() => setRevealed(true)}>{team.name} answered — reveal</Btn>
@@ -258,14 +258,14 @@ export function TiebreakQuestion({ state, dispatch }) {
             <button
               type="button"
               onClick={() => dispatch({ type: 'TIEBREAK_JUDGE', correct: false })}
-              className="answer-btn rounded-2xl bg-red-500/90 px-4 py-5 font-display text-lg font-extrabold text-white"
+              className="answer-btn rounded-2xl bg-red-500/90 px-4 py-4 font-display text-lg font-extrabold text-white"
             >
               ❌ Missed
             </button>
             <button
               type="button"
               onClick={() => dispatch({ type: 'TIEBREAK_JUDGE', correct: true })}
-              className="answer-btn rounded-2xl bg-emerald-500 px-4 py-5 font-display text-lg font-extrabold text-black"
+              className="answer-btn rounded-2xl bg-emerald-500 px-4 py-4 font-display text-lg font-extrabold text-black"
             >
               ✅ Got it
             </button>

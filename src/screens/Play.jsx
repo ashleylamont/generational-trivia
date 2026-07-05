@@ -34,13 +34,11 @@ function questionCounter(state) {
 function AnswerCard({ question }) {
   return (
     <div
-      className="rounded-2xl border-2 p-5 text-center era-accent-border"
+      className="rounded-2xl border-2 p-4 text-center era-accent-border"
       style={{ background: '#ffffff0d' }}
     >
       <div className="mb-1 text-xs font-bold uppercase tracking-widest text-white/40">Answer</div>
-      <div className="font-display text-3xl font-extrabold leading-tight text-white">
-        {question.answer}
-      </div>
+      <div className="font-display t-answer font-extrabold text-white">{question.answer}</div>
       {question.accept && question.accept.length > 0 && (
         <div className="mt-2 text-sm text-white/60">
           also accept: {question.accept.join(', ')}
@@ -56,19 +54,17 @@ export function Handoff({ state, onReady }) {
   const subtitle = pick(HANDOFF_SUBTITLES, state.turnPos + state.roundIndex)
   return (
     <div
-      className="grid min-h-full w-full place-items-center px-6 text-center"
+      className="grid h-[100dvh] w-full place-items-center overflow-y-auto px-6 py-6 text-center"
       style={{ background: `linear-gradient(160deg, ${team.color}cc, ${team.color}55), #0d0f14` }}
     >
       <div>
-        <div className="text-6xl">🎙️</div>
+        <div className="text-5xl sm:text-6xl">🎙️</div>
         <p className="mt-4 text-lg font-bold text-white/80">In the hot seat:</p>
-        <h1 className="mt-1 font-display text-5xl font-extrabold text-white drop-shadow">
-          {team.name}
-        </h1>
-        <p className="mx-auto mt-5 max-w-xs text-sm font-semibold text-white/75">
+        <h1 className="mt-1 font-display t-h1 font-extrabold text-white drop-shadow">{team.name}</h1>
+        <p className="mx-auto mt-4 max-w-xs text-sm font-semibold text-white/75">
           Someone else grab the phone and read them the question aloud. {subtitle}
         </p>
-        <div className="mt-9 w-64">
+        <div className="mx-auto mt-8 w-64">
           <Btn onClick={onReady} style={eraVars(team.homeGens[0])}>
             Read the question
           </Btn>
@@ -240,12 +236,12 @@ export function QuestionScreen({ state, dispatch, onSkip }) {
       </div>
 
       {/* question */}
-      <p className="mt-6 text-xs font-bold uppercase tracking-widest text-white/40">
+      <p className="mt-5 text-xs font-bold uppercase tracking-widest text-white/40">
         Read this aloud
       </p>
-      <h2 className="mt-2 font-display text-3xl font-bold leading-snug text-white">{q.q}</h2>
+      <h2 className="mt-2 font-display t-question font-bold text-white">{q.q}</h2>
 
-      <div className="flex-1" />
+      <div className="min-h-4 flex-1" />
 
       {/* controls */}
       <div className="flex flex-col gap-3">
@@ -295,14 +291,14 @@ export function JudgeScreen({ state, dispatch }) {
         <button
           type="button"
           onClick={() => dispatch({ type: 'JUDGE', correct: false })}
-          className="answer-btn rounded-2xl bg-red-500/90 px-4 py-5 font-display text-lg font-extrabold text-white"
+          className="answer-btn rounded-2xl bg-red-500/90 px-4 py-4 font-display text-lg font-extrabold text-white"
         >
           ❌ Missed it
         </button>
         <button
           type="button"
           onClick={() => dispatch({ type: 'JUDGE', correct: true })}
-          className="answer-btn rounded-2xl bg-emerald-500 px-4 py-5 font-display text-lg font-extrabold text-black"
+          className="answer-btn rounded-2xl bg-emerald-500 px-4 py-4 font-display text-lg font-extrabold text-black"
         >
           ✅ Got it
         </button>
@@ -337,21 +333,21 @@ export function RevealScreen({ state, dispatch }) {
         </span>
       </div>
 
-      <p className="mt-5 font-display text-lg font-bold leading-snug text-white/80">{cur.question.q}</p>
-      <div className="mt-4">
+      <p className="mt-4 font-display text-base font-bold leading-snug text-white/80">{cur.question.q}</p>
+      <div className="mt-3">
         <AnswerCard question={cur.question} />
       </div>
 
-      <p className="mt-5 text-center font-display text-2xl font-extrabold text-white">{line}</p>
+      <p className="mt-4 text-center font-display text-xl font-extrabold text-white">{line}</p>
 
-      <div className="mt-4 rounded-2xl border p-4 era-accent-border" style={{ background: '#ffffff0a' }}>
+      <div className="mt-3 rounded-2xl border p-4 era-accent-border" style={{ background: '#ffffff0a' }}>
         <div className="mb-1 text-xs font-bold uppercase tracking-wider era-accent-text">
           💡 Did you know
         </div>
         <p className="text-[15px] leading-relaxed text-white/90">{cur.question.funFact}</p>
       </div>
 
-      <div className="mt-auto flex flex-col gap-2 pt-6">
+      <div className="mt-auto flex flex-col gap-2 pt-4">
         {cur.stealAvailable ? (
           <>
             <p className="text-center text-sm font-semibold text-white/70">
@@ -437,14 +433,14 @@ export function StealJudge({ state, dispatch }) {
             <button
               type="button"
               onClick={() => dispatch({ type: 'STEAL_JUDGE', correct: false })}
-              className="answer-btn rounded-2xl bg-red-500/90 px-4 py-5 font-display text-lg font-extrabold text-white"
+              className="answer-btn rounded-2xl bg-red-500/90 px-4 py-4 font-display text-lg font-extrabold text-white"
             >
               ❌ Nope
             </button>
             <button
               type="button"
               onClick={() => dispatch({ type: 'STEAL_JUDGE', correct: true })}
-              className="answer-btn rounded-2xl bg-emerald-500 px-4 py-5 font-display text-lg font-extrabold text-black"
+              className="answer-btn rounded-2xl bg-emerald-500 px-4 py-4 font-display text-lg font-extrabold text-black"
             >
               ✅ Nailed it
             </button>
@@ -473,14 +469,14 @@ export function StealReveal({ state, dispatch }) {
           {cur.steal.correct ? `+${cur.steal.gained}` : '+0'}
         </span>
       </div>
-      <p className="mt-5 font-display text-lg font-bold leading-snug text-white/80">{cur.question.q}</p>
-      <div className="mt-4">
+      <p className="mt-4 font-display text-base font-bold leading-snug text-white/80">{cur.question.q}</p>
+      <div className="mt-3">
         <AnswerCard question={cur.question} />
       </div>
-      <p className="mt-5 text-center font-display text-2xl font-extrabold text-white">
+      <p className="mt-4 text-center font-display text-xl font-extrabold text-white">
         {stealTeam.name}: {line}
       </p>
-      <div className="mt-4 rounded-2xl border p-4 era-accent-border" style={{ background: '#ffffff0a' }}>
+      <div className="mt-3 rounded-2xl border p-4 era-accent-border" style={{ background: '#ffffff0a' }}>
         <div className="mb-1 text-xs font-bold uppercase tracking-wider era-accent-text">💡 Did you know</div>
         <p className="text-[15px] leading-relaxed text-white/90">{cur.question.funFact}</p>
       </div>
