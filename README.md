@@ -29,25 +29,50 @@ npm run build    # production build into dist/
 1. **Set up** 2–4 teams. Each team picks its **home eras** (the generations its players actually
    come from) — multi-select, because families team up (Grandma + grandkid).
 2. Pick a **length** (Quick / Classic / Marathon), a **timer**, and which **categories** are in.
-3. Play the rounds:
+3. **Every question is read aloud and answered aloud.** The team in the hot seat gets a question
+   read to them; someone starts the timer; they say their answer out loud; then the phone reveals
+   the canonical answer (plus accepted variants) and the room taps **Got it** or **Missed it** on
+   the honour system. No multiple choice — you have to actually know it.
+4. Play the rounds:
    - **Round 1 — Home Turf:** questions from your own eras. Flat 10 points.
    - **Round 2 — Gen Swap:** questions from eras that aren't yours, weighted toward the furthest.
      Scoring is `10 + 5 × distance` (up to 30).
    - **Round 3 — Lucky Dip** *(Classic & Marathon)*: a spinner lands on a random era × category.
    - **Round 4 — Time Warp Wager** *(Marathon; also the finale of Classic)*: see the era up front,
      wager 0–50% of your score, then answer.
-4. **Steals:** a wrong answer (not a timeout) can be stolen by another team for half points.
-5. **Skips:** one per team per round. **Ties** at the end trigger sudden death.
-6. **Finish** on a podium plus playful **awards** (Time Traveller, High Roller, Steal Merchant…).
+5. **Steals:** a missed answer (not a timeout) can be offered to another team, who call out an
+   answer for the reader to judge — a correct steal is worth half points.
+6. **Skips:** one per team per round. **Ties** at the end trigger sudden death.
+7. **Finish** on a podium plus playful **awards** (Time Traveller, High Roller, Steal Merchant…).
+
+## Deployment
+
+Pushes to `main` build and publish to **GitHub Pages** via
+`.github/workflows/deploy.yml` (the workflow also runs the tests and bank
+validation first). One-time setup: in the repo's **Settings → Pages**, set
+**Source** to **GitHub Actions**. After that the app is served at
+`https://ashleylamont.github.io/generational-trivia/`.
+
+The Vite `base` is `'./'`, so assets load correctly from the project subpath
+without any host-specific configuration.
 
 ## The question bank
 
-280 questions across **5 generations × 7 categories** (music, slang, gaming, film & TV, general,
-sport, toys), 8 per cell. The guiding rule: every question is about something an **Australian
-audience of that generation would have been exposed to** — a healthy chunk of iconic AU content
-(Countdown, Neighbours, Cathy Freeman, Bluey, AFL/NRL) mixed with the global music, film, games and
-slang that were big in Australia. Difficulty is judged *relative to people of that generation*, so a
-"gimme" Boomer question is genuinely testing for a Gen Alpha kid — that asymmetry is the game.
+280 **open-ended** questions across **5 generations × 7 categories** (music, slang, gaming, film &
+TV, general, sport, toys), 8 per cell. Each has a short spoken `answer` plus `accept` variants to
+help whoever's judging. The guiding rule: every question is about something an **Australian audience
+of that generation would have been exposed to** — a healthy chunk of iconic AU content (Countdown,
+Neighbours, Cathy Freeman, Bluey, AFL/NRL) mixed with the global music, film, games and slang that
+were big in Australia. Difficulty is judged *relative to people of that generation*, so a "gimme"
+Boomer question is genuinely testing for a Gen Alpha kid — that asymmetry is the game.
+
+Each question looks like:
+
+```js
+{ id: "ml-music-001", gen: "millennial", category: "music", type: "open", difficulty: 2,
+  q: "Which Brisbane band released the 2000 album 'Odyssey Number Five'?",
+  answer: "Powderfinger", accept: [], funFact: "…", au: true }
+```
 
 Add or edit questions in `src/data/questions/*.js` (one file per generation) and run
 `npm run validate`.
@@ -63,7 +88,7 @@ src/
     scoring.js     generational distance + points model
     draw.js        question selection with distance weighting + fallbacks
     reducer.js     the whole phase state machine
-    prepare.js     option-shuffling that keeps the correct answer tracked
+    prepare.js     normalises a bank question for rendering (answer + accept)
     awards.js      end-of-game awards from the per-question log
     copy.js        rotating Aussie banter
     rng.js         seeded RNG (kept out of the reducer so it stays pure)

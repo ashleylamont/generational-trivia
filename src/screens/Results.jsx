@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Btn, Screen, Leaderboard, GenBadge, TeamPill } from '../ui/components.jsx'
 import { eraVars, genMeta } from '../ui/era.js'
 import { ROUND_KIND } from '../engine/constants.js'
@@ -227,6 +227,7 @@ export function TiebreakQuestion({ state, dispatch }) {
   const tb = state.tiebreak
   const q = tb.question
   const team = state.teams.find((t) => t.id === tb.teamIds[tb.pos])
+  const [revealed, setRevealed] = useState(false)
   return (
     <Screen style={eraVars(tb.gen)}>
       <div className="flex items-center justify-between">
@@ -236,20 +237,41 @@ export function TiebreakQuestion({ state, dispatch }) {
       <div className="mt-5">
         <GenBadge genKey={tb.gen} category={q.category} />
       </div>
-      <h2 className="mt-6 font-display text-2xl font-bold leading-snug text-white">{q.q}</h2>
-      <div className="mt-6 flex flex-col gap-3">
-        {q.options.map((opt, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => dispatch({ type: 'TIEBREAK_ANSWER', index: i })}
-            className="answer-btn rounded-2xl border border-ink-500 bg-ink-700 px-4 py-4 text-left text-lg font-bold text-white"
-          >
-            <span className="mr-2 opacity-50">{String.fromCharCode(65 + i)}</span>
-            {opt}
-          </button>
-        ))}
-      </div>
+      <p className="mt-6 text-xs font-bold uppercase tracking-widest text-white/40">Read this aloud</p>
+      <h2 className="mt-2 font-display text-2xl font-bold leading-snug text-white">{q.q}</h2>
+
+      <div className="flex-1" />
+
+      {!revealed ? (
+        <Btn onClick={() => setRevealed(true)}>{team.name} answered — reveal</Btn>
+      ) : (
+        <>
+          <div className="rounded-2xl border-2 p-5 text-center era-accent-border" style={{ background: '#ffffff0d' }}>
+            <div className="mb-1 text-xs font-bold uppercase tracking-widest text-white/40">Answer</div>
+            <div className="font-display text-3xl font-extrabold text-white">{q.answer}</div>
+            {q.accept?.length > 0 && (
+              <div className="mt-2 text-sm text-white/60">also accept: {q.accept.join(', ')}</div>
+            )}
+          </div>
+          <p className="mt-4 text-center text-sm font-bold text-white/70">Did {team.name} get it?</p>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => dispatch({ type: 'TIEBREAK_JUDGE', correct: false })}
+              className="answer-btn rounded-2xl bg-red-500/90 px-4 py-5 font-display text-lg font-extrabold text-white"
+            >
+              ❌ Missed
+            </button>
+            <button
+              type="button"
+              onClick={() => dispatch({ type: 'TIEBREAK_JUDGE', correct: true })}
+              className="answer-btn rounded-2xl bg-emerald-500 px-4 py-5 font-display text-lg font-extrabold text-black"
+            >
+              ✅ Got it
+            </button>
+          </div>
+        </>
+      )}
     </Screen>
   )
 }
