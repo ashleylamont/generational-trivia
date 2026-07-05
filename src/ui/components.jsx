@@ -127,15 +127,19 @@ export function TimerRing({ seconds, total }) {
   )
 }
 
-// ---- Screen shell — sets the era wash + safe-area padding -------------------
+// ---- Screen shell — fixed to the viewport so the page never scrolls ---------
+// The inner column fills exactly one screen (100dvh, accounting for mobile
+// browser chrome) and only scrolls *inside itself* as a last resort on very
+// short devices. `mt-auto`/`flex-1` spacers in each screen pin action buttons
+// to the bottom when there's slack, so the primary CTA is always in view.
 export function Screen({ children, style, className = '', center = false }) {
   return (
     <div
-      className={`era-wash min-h-full w-full ${className}`}
-      style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', ...style }}
+      className={`era-wash h-[100dvh] w-full overflow-hidden ${className}`}
+      style={style}
     >
       <div
-        className={`mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 ${
+        className={`mx-auto flex h-full w-full max-w-md flex-col overflow-y-auto px-4 py-[max(0.9rem,env(safe-area-inset-top))] pb-[max(0.9rem,env(safe-area-inset-bottom))] ${
           center ? 'justify-center' : ''
         }`}
       >

@@ -19,7 +19,7 @@ export function TitleScreen({ onNew }) {
           <span>📱</span>
           <span>🎮</span>
         </div>
-        <h1 className="font-display text-6xl font-extrabold leading-none text-white">
+        <h1 className="font-display t-hero font-extrabold text-white">
           Era<span className="era-accent-text">Clash</span>
         </h1>
         <p className="mt-3 text-lg text-white/70">
@@ -45,16 +45,17 @@ export function TeamSetup({ state, dispatch, onNext }) {
   return (
     <Screen style={{ '--era-accent': '#f59e0b', '--era-accent-soft': '#b45309' }}>
       <Header title="Who’s playing?" step="1 / 2" />
-      <p className="mb-4 text-sm text-white/60">
+      <p className="mb-3 shrink-0 text-sm text-white/60">
         Pick each team’s home eras — the generations your players actually come from. You score more
         for questions <em>outside</em> your eras.
       </p>
 
-      <div className="flex flex-col gap-4">
+      {/* Team list scrolls on its own; the buttons below stay pinned. */}
+      <div className="-mx-1 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-1 pb-1">
         {state.teams.map((team, idx) => (
           <div
             key={team.id}
-            className="rounded-2xl bg-ink-800 p-4"
+            className="shrink-0 rounded-2xl bg-ink-800 p-3.5"
             style={{ borderLeft: `6px solid ${team.color}` }}
           >
             <div className="mb-3 flex items-center gap-2">
@@ -122,7 +123,7 @@ export function TeamSetup({ state, dispatch, onNext }) {
         ))}
       </div>
 
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="mt-3 flex shrink-0 flex-col gap-2">
         {canAdd && (
           <Btn variant="ghost" onClick={() => dispatch({ type: 'ADD_TEAM' })}>
             + Add team
@@ -139,6 +140,7 @@ export function OptionsSetup({ state, dispatch, onBack, onStart }) {
     <Screen style={{ '--era-accent': '#f59e0b', '--era-accent-soft': '#b45309' }}>
       <Header title="Game options" step="2 / 2" />
 
+      <div className="-mx-1 flex min-h-0 flex-1 flex-col overflow-y-auto px-1">
       <Section label="Length">
         <div className="grid grid-cols-3 gap-2">
           {Object.values(GAME_LENGTHS).map((l) => (
@@ -189,8 +191,9 @@ export function OptionsSetup({ state, dispatch, onBack, onStart }) {
           })}
         </div>
       </Section>
+      </div>
 
-      <div className="mt-auto flex gap-3 pt-6">
+      <div className="mt-3 flex shrink-0 gap-3">
         <Btn variant="ghost" className="flex-1" onClick={onBack}>
           ← Back
         </Btn>
@@ -205,8 +208,8 @@ export function OptionsSetup({ state, dispatch, onBack, onStart }) {
 // ---- little helpers ---------------------------------------------------------
 function Header({ title, step }) {
   return (
-    <div className="mb-3 flex items-baseline justify-between">
-      <h2 className="font-display text-3xl font-extrabold text-white">{title}</h2>
+    <div className="mb-3 flex shrink-0 items-baseline justify-between">
+      <h2 className="font-display t-h2 font-extrabold text-white">{title}</h2>
       <span className="text-sm font-bold text-white/40">{step}</span>
     </div>
   )
@@ -214,7 +217,7 @@ function Header({ title, step }) {
 
 function Section({ label, children }) {
   return (
-    <div className="mb-5">
+    <div className="mb-4">
       <div className="mb-2 text-xs font-bold uppercase tracking-wider text-white/40">{label}</div>
       {children}
     </div>

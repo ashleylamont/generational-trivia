@@ -84,7 +84,7 @@ export default function App() {
     if (raw) dispatch({ type: 'TIEBREAK_PRESENT', prepared: prepareQuestion(raw) })
   }
 
-  return <div className="min-h-screen bg-ink-900 text-white">{renderPhase()}</div>
+  return <div className="h-full w-full bg-ink-900 text-white">{renderPhase()}</div>
 
   function renderPhase() {
     switch (state.phase) {
