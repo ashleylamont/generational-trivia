@@ -30,6 +30,26 @@ function questionCounter(state) {
   return `Q ${cycle}/${state.questionsPerTeam}`
 }
 
+// The canonical answer + any accepted variants, styled for the judge.
+function AnswerCard({ question }) {
+  return (
+    <div
+      className="rounded-2xl border-2 p-5 text-center era-accent-border"
+      style={{ background: '#ffffff0d' }}
+    >
+      <div className="mb-1 text-xs font-bold uppercase tracking-widest text-white/40">Answer</div>
+      <div className="font-display text-3xl font-extrabold leading-tight text-white">
+        {question.answer}
+      </div>
+      {question.accept && question.accept.length > 0 && (
+        <div className="mt-2 text-sm text-white/60">
+          also accept: {question.accept.join(', ')}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ---- Handoff ----------------------------------------------------------------
 export function Handoff({ state, onReady }) {
   const team = currentTeam(state)
@@ -40,15 +60,17 @@ export function Handoff({ state, onReady }) {
       style={{ background: `linear-gradient(160deg, ${team.color}cc, ${team.color}55), #0d0f14` }}
     >
       <div>
-        <div className="text-6xl">📲</div>
-        <p className="mt-4 text-lg font-bold text-white/80">Pass the phone to</p>
+        <div className="text-6xl">🎙️</div>
+        <p className="mt-4 text-lg font-bold text-white/80">In the hot seat:</p>
         <h1 className="mt-1 font-display text-5xl font-extrabold text-white drop-shadow">
           {team.name}
         </h1>
-        <p className="mt-6 text-sm font-semibold text-white/70">{subtitle}</p>
-        <div className="mt-10 w-64">
+        <p className="mx-auto mt-5 max-w-xs text-sm font-semibold text-white/75">
+          Someone else grab the phone and read them the question aloud. {subtitle}
+        </p>
+        <div className="mt-9 w-64">
           <Btn onClick={onReady} style={eraVars(team.homeGens[0])}>
-            We’re ready
+            Read the question
           </Btn>
         </div>
       </div>
@@ -159,14 +181,14 @@ export function WagerScreen({ state, dispatch }) {
   )
 }
 
-// ---- Question ---------------------------------------------------------------
+// ---- Question (read aloud) --------------------------------------------------
 function useCountdown(seconds, active, onExpire) {
   const [left, setLeft] = useState(seconds)
   const cb = useRef(onExpire)
   cb.current = onExpire
   useEffect(() => {
-    setLeft(seconds)
     if (!seconds || !active) return
+    setLeft(seconds)
     const iv = setInterval(() => {
       setLeft((v) => {
         if (v <= 1) {
@@ -183,41 +205,18 @@ function useCountdown(seconds, active, onExpire) {
   return left
 }
 
-function AnswerGrid({ question, onPick, disabled, chosenIndex, revealIndex }) {
-  return (
-    <div className="flex flex-col gap-3">
-      {question.options.map((opt, i) => {
-        let cls = 'bg-ink-700 text-white border border-ink-500'
-        if (revealIndex !== undefined) {
-          if (i === revealIndex) cls = 'bg-emerald-500 text-black border border-emerald-300'
-          else if (i === chosenIndex) cls = 'bg-red-500/90 text-white border border-red-300'
-          else cls = 'bg-ink-800 text-white/50 border border-ink-600'
-        }
-        return (
-          <button
-            key={i}
-            type="button"
-            disabled={disabled}
-            onClick={() => onPick(i)}
-            className={`answer-btn rounded-2xl px-4 py-4 text-left text-lg font-bold transition ${cls}`}
-          >
-            <span className="mr-2 opacity-50">{String.fromCharCode(65 + i)}</span>
-            {opt}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
 export function QuestionScreen({ state, dispatch, onSkip }) {
   const team = currentTeam(state)
   const cur = state.current
   const q = cur.question
-  const active = state.phase === 'question'
-  const left = useCountdown(state.timerSeconds, active, () => dispatch({ type: 'TIMEOUT' }))
   const isWager = cur.roundKind === ROUND_KIND.WAGER
   const points = isWager ? `${cur.base} +${cur.wagerAmount} wager` : `${cur.base} pts`
+  const [timerOn, setTimerOn] = useState(false)
+  const left = useCountdown(
+    state.timerSeconds,
+    timerOn && state.phase === 'question',
+    () => dispatch({ type: 'TIMEOUT' }),
+  )
 
   return (
     <Screen style={eraVars(cur.gen)}>
@@ -229,7 +228,7 @@ export function QuestionScreen({ state, dispatch, onSkip }) {
           </div>
           <TeamPill team={team} score={team.score} className="mt-1" />
         </div>
-        {state.timerSeconds > 0 && <TimerRing seconds={left} total={state.timerSeconds} />}
+        {state.timerSeconds > 0 && timerOn && <TimerRing seconds={left} total={state.timerSeconds} />}
       </div>
 
       {/* badge + points */}
@@ -241,22 +240,73 @@ export function QuestionScreen({ state, dispatch, onSkip }) {
       </div>
 
       {/* question */}
-      <h2 className="mt-6 font-display text-2xl font-bold leading-snug text-white">{q.q}</h2>
+      <p className="mt-6 text-xs font-bold uppercase tracking-widest text-white/40">
+        Read this aloud
+      </p>
+      <h2 className="mt-2 font-display text-3xl font-bold leading-snug text-white">{q.q}</h2>
 
-      <div className="mt-6 flex-1">
-        <AnswerGrid question={q} disabled={!active} onPick={(i) => dispatch({ type: 'ANSWER', index: i })} />
+      <div className="flex-1" />
+
+      {/* controls */}
+      <div className="flex flex-col gap-3">
+        {state.timerSeconds > 0 && !timerOn && (
+          <Btn variant="outline" onClick={() => setTimerOn(true)}>
+            ▶ Start {state.timerSeconds}s timer
+          </Btn>
+        )}
+        <Btn onClick={() => dispatch({ type: 'REVEAL_ANSWER' })}>They’ve answered — reveal</Btn>
+        {team.skipsLeft > 0 && (
+          <button
+            type="button"
+            onClick={onSkip}
+            className="mx-auto rounded-lg px-3 py-1 text-xs font-bold text-white/50 underline"
+          >
+            Skip question ({team.skipsLeft} left)
+          </button>
+        )}
+      </div>
+    </Screen>
+  )
+}
+
+// ---- Judge (the room decides) ----------------------------------------------
+export function JudgeScreen({ state, dispatch }) {
+  const team = currentTeam(state)
+  const cur = state.current
+  return (
+    <Screen style={eraVars(cur.gen)}>
+      <div className="mt-2 flex items-center justify-between">
+        <GenBadge genKey={cur.gen} category={cur.category} />
+        <TeamPill team={team} score={team.score} />
       </div>
 
-      {/* skip */}
-      {team.skipsLeft > 0 && (
+      <p className="mt-6 font-display text-lg font-bold leading-snug text-white/80">{cur.question.q}</p>
+
+      <div className="mt-5">
+        <AnswerCard question={cur.question} />
+      </div>
+
+      <div className="flex-1" />
+
+      <p className="text-center text-sm font-bold text-white/70">
+        Did <span className="text-white">{team.name}</span> get it? (Honour system!)
+      </p>
+      <div className="mt-3 grid grid-cols-2 gap-3">
         <button
           type="button"
-          onClick={onSkip}
-          className="mx-auto mt-5 rounded-lg px-3 py-1.5 text-xs font-bold text-white/50 underline"
+          onClick={() => dispatch({ type: 'JUDGE', correct: false })}
+          className="answer-btn rounded-2xl bg-red-500/90 px-4 py-5 font-display text-lg font-extrabold text-white"
         >
-          Skip question ({team.skipsLeft} left)
+          ❌ Missed it
         </button>
-      )}
+        <button
+          type="button"
+          onClick={() => dispatch({ type: 'JUDGE', correct: true })}
+          className="answer-btn rounded-2xl bg-emerald-500 px-4 py-5 font-display text-lg font-extrabold text-black"
+        >
+          ✅ Got it
+        </button>
+      </div>
     </Screen>
   )
 }
@@ -264,33 +314,8 @@ export function QuestionScreen({ state, dispatch, onSkip }) {
 // ---- Reveal -----------------------------------------------------------------
 export function RevealScreen({ state, dispatch }) {
   const cur = state.current
-  const q = cur.question
   const team = currentTeam(state)
   const g = genMeta(cur.gen)
-
-  // Steal on offer — hide the correct answer to avoid spoiling the steal.
-  if (cur.stealAvailable) {
-    return (
-      <Screen center style={eraVars(cur.gen)}>
-        <div className="text-center">
-          <div className="text-5xl">🤔</div>
-          <h2 className="mt-3 font-display text-3xl font-extrabold text-white">Not quite!</h2>
-          <p className="mt-2 text-white/70">
-            {team.name} missed it. A steal is up for grabs — worth{' '}
-            <span className="font-bold era-accent-text">{Math.ceil(cur.base / 2)} pts</span>.
-          </p>
-        </div>
-        <div className="mt-10 flex flex-col gap-3">
-          <Btn onClick={() => dispatch({ type: 'OPEN_STEAL' })}>Offer the steal 🖐️</Btn>
-          <Btn variant="ghost" onClick={() => dispatch({ type: 'SKIP_STEAL' })}>
-            No steal — show the answer
-          </Btn>
-        </div>
-      </Screen>
-    )
-  }
-
-  const wager = cur.roundKind === ROUND_KIND.WAGER
   const line = cur.correct
     ? pick(CORRECT_LINES, state.copyIndex)
     : cur.timedOut
@@ -312,36 +337,41 @@ export function RevealScreen({ state, dispatch }) {
         </span>
       </div>
 
-      <h2 className="mt-5 font-display text-xl font-bold leading-snug text-white">{q.q}</h2>
-
-      <div className="mt-5">
-        <AnswerGrid
-          question={q}
-          disabled
-          chosenIndex={cur.chosenIndex}
-          revealIndex={q.correctIndex}
-          onPick={() => {}}
-        />
+      <p className="mt-5 font-display text-lg font-bold leading-snug text-white/80">{cur.question.q}</p>
+      <div className="mt-4">
+        <AnswerCard question={cur.question} />
       </div>
 
       <p className="mt-5 text-center font-display text-2xl font-extrabold text-white">{line}</p>
 
-      {/* fun fact — the conversation fuel */}
       <div className="mt-4 rounded-2xl border p-4 era-accent-border" style={{ background: '#ffffff0a' }}>
         <div className="mb-1 text-xs font-bold uppercase tracking-wider era-accent-text">
           💡 Did you know
         </div>
-        <p className="text-[15px] leading-relaxed text-white/90">{q.funFact}</p>
+        <p className="text-[15px] leading-relaxed text-white/90">{cur.question.funFact}</p>
       </div>
 
-      <div className="mt-auto pt-6">
-        <Btn onClick={() => dispatch({ type: 'ADVANCE' })}>Next →</Btn>
+      <div className="mt-auto flex flex-col gap-2 pt-6">
+        {cur.stealAvailable ? (
+          <>
+            <p className="text-center text-sm font-semibold text-white/70">
+              {team.name} missed it — another team can steal for{' '}
+              <span className="font-bold era-accent-text">{Math.ceil(cur.base / 2)} pts</span>.
+            </p>
+            <Btn onClick={() => dispatch({ type: 'OPEN_STEAL' })}>Offer the steal 🖐️</Btn>
+            <Btn variant="ghost" onClick={() => dispatch({ type: 'SKIP_STEAL' })}>
+              No steal — next
+            </Btn>
+          </>
+        ) : (
+          <Btn onClick={() => dispatch({ type: 'ADVANCE' })}>Next →</Btn>
+        )}
       </div>
     </Screen>
   )
 }
 
-// ---- Steal: pick who buzzed -------------------------------------------------
+// ---- Steal: pick who's having a go -----------------------------------------
 export function StealPick({ state, dispatch }) {
   const others = state.teams.filter((t) => t.id !== state.current.teamId)
   return (
@@ -349,7 +379,7 @@ export function StealPick({ state, dispatch }) {
       <div className="text-center">
         <div className="text-5xl">🖐️</div>
         <h2 className="mt-3 font-display text-3xl font-extrabold text-white">Steal!</h2>
-        <p className="mt-2 text-white/70">Who called it first? Pass the phone to them.</p>
+        <p className="mt-2 text-white/70">Who’s having a go? Pass the phone to whoever called it first.</p>
       </div>
       <div className="mt-8 flex flex-col gap-3">
         {others.map((t) => (
@@ -375,32 +405,58 @@ export function StealPick({ state, dispatch }) {
   )
 }
 
-// ---- Steal: the stealing team answers --------------------------------------
-export function StealQuestion({ state, dispatch }) {
-  const q = state.current.question
-  const stealTeam = state.teams.find((t) => t.id === state.current.steal.teamId)
+// ---- Steal: judge the stealing team ----------------------------------------
+export function StealJudge({ state, dispatch }) {
+  const cur = state.current
+  const stealTeam = state.teams.find((t) => t.id === cur.steal.teamId)
+  const [revealed, setRevealed] = useState(false)
   return (
-    <Screen style={eraVars(state.current.gen)}>
+    <Screen style={eraVars(cur.gen)}>
       <div className="flex items-center justify-between">
         <TeamPill team={stealTeam} />
         <span className="rounded-lg bg-ink-800 px-3 py-1.5 font-display text-sm font-extrabold era-accent-text">
-          Steal · {Math.ceil(state.current.base / 2)} pts
+          Steal · {Math.ceil(cur.base / 2)} pts
         </span>
       </div>
       <div className="mt-5">
-        <GenBadge genKey={state.current.gen} category={state.current.category} />
+        <GenBadge genKey={cur.gen} category={cur.category} />
       </div>
-      <h2 className="mt-6 font-display text-2xl font-bold leading-snug text-white">{q.q}</h2>
-      <div className="mt-6">
-        <AnswerGrid question={q} onPick={(i) => dispatch({ type: 'STEAL_ANSWER', index: i })} />
-      </div>
+      <h2 className="mt-6 font-display text-2xl font-bold leading-snug text-white">{cur.question.q}</h2>
+
+      <div className="flex-1" />
+
+      {!revealed ? (
+        <Btn onClick={() => setRevealed(true)}>{stealTeam.name} answered — reveal</Btn>
+      ) : (
+        <>
+          <AnswerCard question={cur.question} />
+          <p className="mt-4 text-center text-sm font-bold text-white/70">
+            Did {stealTeam.name} nail it?
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => dispatch({ type: 'STEAL_JUDGE', correct: false })}
+              className="answer-btn rounded-2xl bg-red-500/90 px-4 py-5 font-display text-lg font-extrabold text-white"
+            >
+              ❌ Nope
+            </button>
+            <button
+              type="button"
+              onClick={() => dispatch({ type: 'STEAL_JUDGE', correct: true })}
+              className="answer-btn rounded-2xl bg-emerald-500 px-4 py-5 font-display text-lg font-extrabold text-black"
+            >
+              ✅ Nailed it
+            </button>
+          </div>
+        </>
+      )}
     </Screen>
   )
 }
 
 export function StealReveal({ state, dispatch }) {
   const cur = state.current
-  const q = cur.question
   const stealTeam = state.teams.find((t) => t.id === cur.steal.teamId)
   const line = cur.steal.correct
     ? pick(STEAL_WIN_LINES, state.copyIndex)
@@ -417,22 +473,16 @@ export function StealReveal({ state, dispatch }) {
           {cur.steal.correct ? `+${cur.steal.gained}` : '+0'}
         </span>
       </div>
-      <h2 className="mt-5 font-display text-xl font-bold leading-snug text-white">{q.q}</h2>
-      <div className="mt-5">
-        <AnswerGrid
-          question={q}
-          disabled
-          chosenIndex={cur.steal.chosenIndex}
-          revealIndex={q.correctIndex}
-          onPick={() => {}}
-        />
+      <p className="mt-5 font-display text-lg font-bold leading-snug text-white/80">{cur.question.q}</p>
+      <div className="mt-4">
+        <AnswerCard question={cur.question} />
       </div>
       <p className="mt-5 text-center font-display text-2xl font-extrabold text-white">
         {stealTeam.name}: {line}
       </p>
       <div className="mt-4 rounded-2xl border p-4 era-accent-border" style={{ background: '#ffffff0a' }}>
         <div className="mb-1 text-xs font-bold uppercase tracking-wider era-accent-text">💡 Did you know</div>
-        <p className="text-[15px] leading-relaxed text-white/90">{q.funFact}</p>
+        <p className="text-[15px] leading-relaxed text-white/90">{cur.question.funFact}</p>
       </div>
       <div className="mt-auto pt-6">
         <Btn onClick={() => dispatch({ type: 'ADVANCE' })}>Next →</Btn>

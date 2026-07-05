@@ -20,9 +20,10 @@ export const PHASE = {
   SPINNER: 'spinner',
   WAGER: 'wager',
   QUESTION: 'question',
+  JUDGE: 'judge',
   REVEAL: 'reveal',
   STEAL_PICK: 'steal_pick',
-  STEAL_QUESTION: 'steal_question',
+  STEAL_JUDGE: 'steal_judge',
   STEAL_REVEAL: 'steal_reveal',
   ROUND_SUMMARY: 'round_summary',
   FINAL: 'final_results',
@@ -151,7 +152,6 @@ function beginTurn(state) {
       category: null,
       distance: 0,
       base: 0,
-      chosenIndex: null,
       correct: null,
       gained: 0,
       timedOut: false,
@@ -183,9 +183,10 @@ function contextForQuestion(state, prepared) {
   return { distance, base }
 }
 
-function applyAnswer(state, chosenIndex, timedOut) {
+// The room judges the spoken answer right or wrong (honour system). A timeout is
+// a forced miss with no steal offered.
+function judgeAnswer(state, correct, timedOut) {
   const cur = state.current
-  const correct = !timedOut && chosenIndex === cur.question.correctIndex
   let gained
   if (cur.roundKind === ROUND_KIND.WAGER) {
     gained = resolveWager({ correct, base: cur.base, wager: cur.wagerAmount })
@@ -210,7 +211,7 @@ function applyAnswer(state, chosenIndex, timedOut) {
     },
   ]
 
-  // Steal eligibility: wrong (not timeout), not a wager, and another team exists.
+  // Steal eligibility: missed (not on a timeout), not a wager, another team exists.
   const stealAvailable =
     !correct && !timedOut && cur.roundKind !== ROUND_KIND.WAGER && state.teams.length > 1
 
@@ -222,7 +223,6 @@ function applyAnswer(state, chosenIndex, timedOut) {
     phase: PHASE.REVEAL,
     current: {
       ...cur,
-      chosenIndex,
       correct,
       gained,
       timedOut,
@@ -469,11 +469,15 @@ export function reducer(state, action) {
       }
     }
 
-    // -- Answering ------------------------------------------------------------
-    case 'ANSWER':
-      return applyAnswer(state, action.index, false)
+    // -- Answering (read-aloud, honour judged) --------------------------------
+    // The team answers out loud; REVEAL_ANSWER shows the canonical answer so the
+    // room can judge it.
+    case 'REVEAL_ANSWER':
+      return { ...state, phase: PHASE.JUDGE }
+    case 'JUDGE':
+      return judgeAnswer(state, action.correct, false)
     case 'TIMEOUT':
-      return applyAnswer(state, null, true)
+      return judgeAnswer(state, false, true)
 
     // -- Steal ----------------------------------------------------------------
     case 'OPEN_STEAL':
@@ -487,12 +491,12 @@ export function reducer(state, action) {
     case 'STEAL_PICK':
       return {
         ...state,
-        phase: PHASE.STEAL_QUESTION,
-        current: { ...state.current, steal: { teamId: action.teamId, chosenIndex: null } },
+        phase: PHASE.STEAL_JUDGE,
+        current: { ...state.current, steal: { teamId: action.teamId, correct: null } },
       }
-    case 'STEAL_ANSWER': {
+    case 'STEAL_JUDGE': {
       const cur = state.current
-      const correct = action.index === cur.question.correctIndex
+      const correct = action.correct
       const gained = correct ? stealPoints(cur.base) : 0
       const teams = state.teams.map((t) =>
         t.id === cur.steal.teamId ? { ...t, score: Math.max(0, t.score + gained) } : t,
@@ -523,7 +527,7 @@ export function reducer(state, action) {
         current: {
           ...cur,
           revealFull: true,
-          steal: { ...cur.steal, chosenIndex: action.index, correct, gained },
+          steal: { ...cur.steal, correct, gained },
         },
       }
     }
@@ -556,10 +560,10 @@ export function reducer(state, action) {
         tiebreak: { ...state.tiebreak, question: action.prepared },
       }
     }
-    case 'TIEBREAK_ANSWER': {
+    case 'TIEBREAK_JUDGE': {
       const tb = state.tiebreak
       const teamId = tb.teamIds[tb.pos]
-      const correct = action.index === tb.question.correctIndex
+      const correct = action.correct
       const answers = { ...tb.answers, [teamId]: correct }
       const nextPos = tb.pos + 1
       if (nextPos < tb.teamIds.length) {

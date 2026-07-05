@@ -11,9 +11,10 @@ import {
   Spinner,
   WagerScreen,
   QuestionScreen,
+  JudgeScreen,
   RevealScreen,
   StealPick,
-  StealQuestion,
+  StealJudge,
   StealReveal,
 } from './screens/Play.jsx'
 import {
@@ -49,7 +50,7 @@ export default function App() {
       enabledCategories: state.enabledCategories,
       rng,
     })
-    return raw ? prepareQuestion(raw, rng) : null
+    return raw ? prepareQuestion(raw) : null
   }
 
   function handleReady() {
@@ -80,7 +81,7 @@ export default function App() {
       enabledCategories: state.enabledCategories,
       rng,
     })
-    if (raw) dispatch({ type: 'TIEBREAK_PRESENT', prepared: prepareQuestion(raw, rng) })
+    if (raw) dispatch({ type: 'TIEBREAK_PRESENT', prepared: prepareQuestion(raw) })
   }
 
   return <div className="min-h-screen bg-ink-900 text-white">{renderPhase()}</div>
@@ -116,12 +117,14 @@ export default function App() {
         return <WagerScreen state={state} dispatch={dispatch} />
       case PHASE.QUESTION:
         return <QuestionScreen state={state} dispatch={dispatch} onSkip={handleSkip} />
+      case PHASE.JUDGE:
+        return <JudgeScreen state={state} dispatch={dispatch} />
       case PHASE.REVEAL:
         return <RevealScreen state={state} dispatch={dispatch} />
       case PHASE.STEAL_PICK:
         return <StealPick state={state} dispatch={dispatch} />
-      case PHASE.STEAL_QUESTION:
-        return <StealQuestion state={state} dispatch={dispatch} />
+      case PHASE.STEAL_JUDGE:
+        return <StealJudge state={state} dispatch={dispatch} />
       case PHASE.STEAL_REVEAL:
         return <StealReveal state={state} dispatch={dispatch} />
       case PHASE.ROUND_SUMMARY:
