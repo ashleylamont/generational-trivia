@@ -48,6 +48,28 @@ export function GenBadge({ genKey, category, size = 'md' }) {
   )
 }
 
+// ---- Difficulty indicator ---------------------------------------------------
+const DIFF_LABEL = { 1: 'Gentle', 2: 'Tricky', 3: 'Brutal' }
+
+export function DifficultyPips({ difficulty, showLabel = true }) {
+  return (
+    <span
+      className="inline-flex items-center gap-1 text-[11px] font-bold text-white/55"
+      title={`Difficulty ${difficulty} of 3`}
+    >
+      <span className="inline-flex items-center gap-0.5">
+        {[1, 2, 3].map((i) => (
+          <span
+            key={i}
+            className={`h-1.5 w-1.5 rounded-full ${i <= difficulty ? 'era-accent-bg' : 'bg-white/20'}`}
+          />
+        ))}
+      </span>
+      {showLabel && <span>{DIFF_LABEL[difficulty]}</span>}
+    </span>
+  )
+}
+
 // ---- Team pill --------------------------------------------------------------
 export function TeamPill({ team, score, className = '' }) {
   return (

@@ -11,19 +11,19 @@ const ROUND_INTRO = {
     name: 'Home Turf',
     emoji: '🏠',
     blurb: 'Questions from your own eras. Warm up — and see what you’ve forgotten about your own decade.',
-    scoring: 'Flat 10 points each.',
+    scoring: '10 pts + a bonus for tougher questions (d2 +5, d3 +10).',
   },
   [ROUND_KIND.SWAP]: {
     name: 'Gen Swap',
     emoji: '🔀',
     blurb: 'Questions from eras that aren’t yours. The further from home, the more it’s worth.',
-    scoring: '10 + 5 × distance (up to 30).',
+    scoring: '10 + 5 × distance, plus the difficulty bonus.',
   },
   [ROUND_KIND.LUCKY]: {
     name: 'Lucky Dip',
     emoji: '🎰',
     blurb: 'Spin the wheel — a random era and category each time. Anything goes.',
-    scoring: 'Points scale with how far the era is from home.',
+    scoring: 'Distance points, plus the difficulty bonus.',
   },
   [ROUND_KIND.WAGER]: {
     name: 'Time Warp Wager',

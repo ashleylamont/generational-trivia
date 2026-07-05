@@ -6,6 +6,7 @@ import {
   GAME_LENGTHS,
   TIMER_OPTIONS,
   DEFAULT_TEAM_NAMES,
+  STAKES,
 } from '../engine/constants.js'
 
 export function TitleScreen({ onNew }) {
@@ -108,6 +109,34 @@ export function TeamSetup({ state, dispatch, onNext }) {
                   </button>
                 )
               })}
+            </div>
+
+            {/* Difficulty opt-in: harder questions are worth more points. */}
+            <div className="mt-3">
+              <div className="mb-1.5 flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-white/40">
+                  Difficulty
+                </span>
+                <span className="text-[11px] text-white/45">{STAKES[team.stake]?.hint}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {Object.values(STAKES).map((s) => {
+                  const on = team.stake === s.key
+                  return (
+                    <button
+                      key={s.key}
+                      type="button"
+                      onClick={() => dispatch({ type: 'SET_STAKE', teamId: team.id, stake: s.key })}
+                      className={`flex items-center justify-center gap-1 rounded-xl px-2 py-2 text-sm font-bold transition ${
+                        on ? 'era-accent-bg text-black' : 'bg-ink-700 text-white/60'
+                      }`}
+                    >
+                      <span>{s.emoji}</span>
+                      <span>{s.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             {canRemove && (

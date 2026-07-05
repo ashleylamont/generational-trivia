@@ -14,11 +14,18 @@ export function generationDistance(questionGen, homeGens) {
   return best === Infinity ? 0 : best
 }
 
+// Harder questions are worth more, so opting into tougher questions pays off:
+// d1 +0, d2 +5, d3 +10. Difficulty is relative to the question's own generation.
+export function difficultyBonus(difficulty) {
+  return (Math.max(1, Math.min(3, difficulty || 1)) - 1) * 5
+}
+
 // Base points on offer for a question, before steals/wagers.
 // Home Turf: flat 10. Everything else: 10 + 5 × distance (distance 0 = 10).
-export function basePoints(roundKind, distance) {
-  if (roundKind === ROUND_KIND.HOME) return 10
-  return 10 + 5 * distance
+// Every question then adds a difficulty bonus on top.
+export function basePoints(roundKind, distance, difficulty = 1) {
+  const core = roundKind === ROUND_KIND.HOME ? 10 : 10 + 5 * distance
+  return core + difficultyBonus(difficulty)
 }
 
 // A successful steal earns half the base points, rounded up.

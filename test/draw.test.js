@@ -61,6 +61,27 @@ describe('drawQuestion', () => {
     expect(q.category).toBe('music')
   })
 
+  it('Brutal stake weights skew the draw toward d3', () => {
+    const bank = stubBank() // 3 questions per gen×cat, difficulties 1/2/3
+    const rng = mulberry32(42)
+    const brutal = { 1: 0, 2: 0.2, 3: 0.8 }
+    let d3 = 0
+    const N = 60
+    for (let i = 0; i < N; i++) {
+      const q = drawQuestion({
+        bank,
+        usedIds: new Set(), // fresh pool each draw so weights (not exhaustion) decide
+        gen: 'genz',
+        category: 'music',
+        enabledCategories: ['music'],
+        rng,
+        diffWeights: brutal,
+      })
+      if (q.difficulty === 3) d3++
+    }
+    expect(d3 / N).toBeGreaterThan(0.6) // heavily favours the hardest tier
+  })
+
   it('never repeats when drawing the whole bank', () => {
     const bank = stubBank()
     const rng = mulberry32(7)
