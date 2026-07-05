@@ -1,7 +1,7 @@
 // Gen X — Brutal tier (difficulty 4) deep-cut questions
 const genxBrutal = [
   // ── MUSIC ─────────────────────────────────────────────────────────────
-  { id: "gx-music-009", gen: "genx", category: "music", type: "open", difficulty: 4, q: "Which British producer, known for his work with the Sex Pistols and Roxy Music, produced INXS's 1987 album 'Kick'?", answer: "Chris Thomas", accept: [], funFact: "Thomas produced four straight INXS albums, from 'The Swing' through to 'X'.", au: true },
+  { id: "gx-music-009", gen: "genx", category: "music", type: "open", difficulty: 4, q: "Which British producer, known for his work with the Sex Pistols and Roxy Music, produced INXS's 1987 album 'Kick'?", answer: "Chris Thomas", accept: [], funFact: "Thomas produced three straight INXS albums: 'Listen Like Thieves', 'Kick' and 'X'.", au: true },
   { id: "gx-music-010", gen: "genx", category: "music", type: "open", difficulty: 4, q: "Which rock guitarist played the uncredited solo on Michael Jackson's 1982 track 'Beat It'?", answer: "Eddie Van Halen", accept: ["Van Halen"], funFact: "He reportedly recorded the solo as a favour and took no fee for it.", au: false },
   { id: "gx-music-011", gen: "genx", category: "music", type: "open", difficulty: 4, q: "Frankie Goes to Hollywood's 1984 single 'Relax' was famously banned from airplay by which British broadcaster?", answer: "BBC", accept: ["The BBC", "British Broadcasting Corporation"], funFact: "The ban only fuelled sales, and the single went on to spend five weeks at number one.", au: false },
 
