@@ -40,6 +40,17 @@ npm run build    # production build into dist/
 5. **Skips:** one per team per round. **Ties** at the end trigger sudden death.
 6. **Finish** on a podium plus playful **awards** (Time Traveller, High Roller, Steal Merchant…).
 
+## Deployment
+
+Pushes to `main` build and publish to **GitHub Pages** via
+`.github/workflows/deploy.yml` (the workflow also runs the tests and bank
+validation first). One-time setup: in the repo's **Settings → Pages**, set
+**Source** to **GitHub Actions**. After that the app is served at
+`https://ashleylamont.github.io/generational-trivia/`.
+
+The Vite `base` is `'./'`, so assets load correctly from the project subpath
+without any host-specific configuration.
+
 ## The question bank
 
 280 questions across **5 generations × 7 categories** (music, slang, gaming, film & TV, general,
