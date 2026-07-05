@@ -10,7 +10,7 @@ const warnings = []
 const ids = new Set()
 const texts = new Map()
 const cellCounts = {}
-const diffCounts = { 1: 0, 2: 0, 3: 0 }
+const diffCounts = { 1: 0, 2: 0, 3: 0, 4: 0 }
 
 for (const g of genKeys) for (const c of catKeys) cellCounts[`${g}/${c}`] = 0
 
@@ -22,7 +22,7 @@ for (const [i, q] of QUESTION_BANK.entries()) {
 
   if (!genKeys.has(q.gen)) errors.push(`${where}: bad gen "${q.gen}"`)
   if (!catKeys.has(q.category)) errors.push(`${where}: bad category "${q.category}"`)
-  if (![1, 2, 3].includes(q.difficulty)) errors.push(`${where}: bad difficulty ${q.difficulty}`)
+  if (![1, 2, 3, 4].includes(q.difficulty)) errors.push(`${where}: bad difficulty ${q.difficulty}`)
   else diffCounts[q.difficulty]++
   if (typeof q.q !== 'string' || q.q.length < 8) errors.push(`${where}: bad q text`)
   if (typeof q.funFact !== 'string' || q.funFact.length < 8) errors.push(`${where}: bad funFact`)
@@ -57,8 +57,7 @@ const pct = (n) => `${Math.round((n / total) * 100)}%`
 console.log(`Total questions: ${total}`)
 console.log(`AU-specific: ${au} (${pct(au)})`)
 console.log(
-  `Difficulty: d1 ${diffCounts[1]} (${pct(diffCounts[1])}) · ` +
-    `d2 ${diffCounts[2]} (${pct(diffCounts[2])}) · d3 ${diffCounts[3]} (${pct(diffCounts[3])})`,
+  `Difficulty: d1 ${diffCounts[1]} · d2 ${diffCounts[2]} · d3 ${diffCounts[3]} · d4 ${diffCounts[4]}`,
 )
 console.log(`Smallest gen×category cell: ${minCell}  ·  Cells: ${Object.keys(cellCounts).length}`)
 if (warnings.length) console.log(`\n⚠️  ${warnings.length} warnings (non-fatal):`)

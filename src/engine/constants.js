@@ -119,15 +119,20 @@ export const ROUND_KIND = {
 
 export const WAGER_PRESETS = [0, 0.1, 0.25, 0.5]
 
-// Difficulty tiers. Teams choose one before each question (defaulting to their
-// setup pick) — harder tiers draw harder questions worth more points.
+// Difficulty tiers teams pick from before each question. The pool actually holds
+// four levels (1 = easiest … 4 = brutal); the picker deliberately omits level 1,
+// which only ever appears as a fallback when a harder tier is exhausted.
 export const DIFFICULTIES = [
-  { level: 1, label: 'Gentle', emoji: '🙂', bonus: 0, hint: 'easier · base points' },
-  { level: 2, label: 'Tricky', emoji: '😤', bonus: 5, hint: 'medium · +5 points' },
-  { level: 3, label: 'Brutal', emoji: '💀', bonus: 10, hint: 'hard · +10 points' },
+  { level: 2, label: 'Tricky', emoji: '🙂', bonus: 5, hint: 'medium · +5 pts' },
+  { level: 3, label: 'Hard', emoji: '😤', bonus: 10, hint: 'hard · +10 pts' },
+  { level: 4, label: 'Brutal', emoji: '💀', bonus: 15, hint: 'deep cuts · +15 pts' },
 ]
+
+// All four levels, for labels/pips (includes the fallback-only level 1).
+export const DIFFICULTY_LABELS = { 1: 'Gentle', 2: 'Tricky', 3: 'Hard', 4: 'Brutal' }
+export const MAX_DIFFICULTY = 4
 
 export const DIFF_BY_LEVEL = Object.fromEntries(DIFFICULTIES.map((d) => [d.level, d]))
 
-// Sensible default: a bit harder than a warm-up.
-export const DEFAULT_DIFFICULTY = 2
+// Default sits in the middle of the pickable range — the game skews hard.
+export const DEFAULT_DIFFICULTY = 3

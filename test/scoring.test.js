@@ -41,15 +41,17 @@ describe('basePoints', () => {
 })
 
 describe('difficulty bonus', () => {
-  it('rewards harder questions: d1 +0, d2 +5, d3 +10', () => {
+  it('rewards harder questions: d1 +0, d2 +5, d3 +10, d4 +15', () => {
     expect(difficultyBonus(1)).toBe(0)
     expect(difficultyBonus(2)).toBe(5)
     expect(difficultyBonus(3)).toBe(10)
+    expect(difficultyBonus(4)).toBe(15)
   })
   it('is added on top of the core points', () => {
     expect(basePoints(ROUND_KIND.HOME, 0, 3)).toBe(20) // 10 + 10
+    expect(basePoints(ROUND_KIND.HOME, 0, 4)).toBe(25) // 10 + 15 (brutal home turf)
     expect(basePoints(ROUND_KIND.SWAP, 2, 2)).toBe(25) // 10 + 10 + 5
-    expect(basePoints(ROUND_KIND.SWAP, 4, 3)).toBe(40) // 10 + 20 + 10
+    expect(basePoints(ROUND_KIND.SWAP, 4, 4)).toBe(45) // 10 + 20 + 15
   })
   it('defaults to no bonus when difficulty is omitted', () => {
     expect(basePoints(ROUND_KIND.SWAP, 1)).toBe(15)
